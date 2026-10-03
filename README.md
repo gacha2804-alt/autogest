@@ -3,15 +3,6 @@
 > **Asignatura:** Minería de Datos — 8vo Semestre (UNIMINUTO Ibagué)  
 > **Metodología:** CRISP-DM (Sesiones 1 a 4: Comprensión del Negocio, Ingesta Multifuente, Limpieza MAR/IQR y Transformación/PCA)  
 > **Volumen de Datos Procesado:** 2,000,000 de registros automotrices + Clima histórico Ibagué (OpenMeteo API)  
-
----
-
-## 🔗 Fuentes de Datos Crudos (SharePoint)
-
-Los archivos CSV crudos masivos y los datasets procesados se gestionan fuera del repositorio de Git por límites de tamaño y están disponibles en la nube institucional:
-
-📌 [Descargar Datasets Crudos y Procesados (SharePoint UNIMINUTO)](https://uniminuto0-my.sharepoint.com/:f:/g/personal/emelin_rubiano_uniminuto_edu_co/IgBTGesoYcyWSrdEF8_OHqZlAQNIo4kw3mzk9I87xceu4yc?email=esteban.morales.c%40uniminuto.edu.co&e=5HdeoD)
-
 ---
 
 ## 📌 Visión General del Proyecto
