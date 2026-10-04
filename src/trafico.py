@@ -1,5 +1,5 @@
 import pandas as pd
-
+#clase para manejar el dataset de trafico
 class Trafico:
     def __init__(self, ruta):
         self.ruta = ruta

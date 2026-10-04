@@ -1,6 +1,6 @@
 import pandas as pd
 
-
+#class para manejar el dataset de accidentes
 class Accidentes:
     def __init__(self, ruta):
         self.ruta = ruta
