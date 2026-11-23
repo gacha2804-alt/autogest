@@ -1,0 +1,22 @@
+{
+  "name": "autogest-back",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend AutoGest (Supabase Edge Functions + Dev Server Local + Migraciones NeonDB)",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "db:migrate": "node db/migrate.mjs",
+    "db:seed": "node db/seed.mjs",
+    "db:setup": "node db/migrate.mjs && node db/seed.mjs",
+    "test": "node --test tests/api.test.mjs",
+    "audit:cdp": "node scripts/cdp-report.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

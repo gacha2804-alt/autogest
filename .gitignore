@@ -1,0 +1,8 @@
+﻿node_modules/
+.env
+.env.*
+!.env.example
+.local-predictions.json
+reports/
+.DS_Store
+Thumbs.db

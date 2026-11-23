@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "@neondatabase/serverless": "npm:@neondatabase/serverless@^1.0.0"
+  }
+}

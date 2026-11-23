@@ -1,0 +1,6 @@
+# Configuración del proyecto Supabase · AutoGest Backend (Edge Functions)
+project_id = "swmzcurubsmrwxbylsbh"
+
+[functions.autogest-api]
+# Dashboard analítico público (sin login); la validación y parametrización SQL se hacen en el handler
+verify_jwt = false
