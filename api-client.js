@@ -8,6 +8,38 @@
   const cfg = window.AUTOGEST_CONFIG || { API_BASE_URL: '/api' };
   const API_BASE = String(cfg.API_BASE_URL || '/api').replace(/\/+$/, '');
 
+  function isServiceExpired() {
+    if (!cfg.ACTIVE_UNTIL) return false;
+    const cutoff = Date.parse(cfg.ACTIVE_UNTIL);
+    return Number.isFinite(cutoff) && Date.now() > cutoff;
+  }
+
+  function renderClosedOverlay(customMessage) {
+    if (document.getElementById('autogestClosedOverlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'autogestClosedOverlay';
+    overlay.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:99999',
+      'background:rgba(15,23,42,0.97)', 'backdrop-filter:blur(8px)',
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'padding:24px', 'color:#e2e8f0', "font-family:'Segoe UI',system-ui,sans-serif",
+    ].join(';');
+    overlay.innerHTML = `
+      <div style="max-width:560px;width:100%;background:#1e293b;border:1px solid #334155;border-top:4px solid #38bdf8;border-radius:16px;padding:32px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.6)">
+        <div style="font-size:44px;margin-bottom:12px">🚦</div>
+        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:10px;color:#f8fafc">Proyecto Académico AutoGest Finalizado</h2>
+        <p style="font-size:.95rem;color:#94a3b8;line-height:1.6;margin-bottom:18px">
+          ${customMessage || 'Esta demostración en línea (UNIMINUTO Ibagué · Minería de Datos y Métodos Numéricos) estuvo habilitada hasta el <strong>5 de diciembre de 2026</strong>.'}
+        </p>
+        <div style="display:inline-block;padding:6px 14px;border-radius:999px;background:#0ea5e920;color:#38bdf8;border:1px solid #0ea5e940;font-size:.8rem;font-weight:600">
+          Servicio cerrado automáticamente · Sin consumo activo en la nube
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+  }
+
   async function apiFetch(endpoint, options = {}) {
     const res = await fetch(`${API_BASE}${endpoint}`, {
       headers: {
@@ -17,6 +49,10 @@
       ...options,
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 503 && data?.status === 'closed') {
+      renderClosedOverlay(data.message);
+      throw new Error(data.message || 'Servicio cerrado');
+    }
     if (!res.ok) {
       throw new Error(data.error || `HTTP ${res.status}`);
     }
@@ -225,6 +261,12 @@
   }
 
   async function initAutogestApi() {
+    if (isServiceExpired()) {
+      updateStatusBadge('offline', '🔒 Demo finalizada (5 dic 2026)');
+      renderClosedOverlay();
+      return;
+    }
+
     if (window.location.protocol === 'file:') {
       updateStatusBadge('offline', '🟡 Modo Estático Local (file://)');
       return;
