@@ -149,3 +149,37 @@ test('API router (handleApiRequest) responde correctamente en todos los endpoint
     }
   }
 });
+
+test('Control de vigencia hasta el 5 de diciembre de 2026 (23:59 COT)', async () => {
+  let dbCalls = 0;
+  const spyAdapter = {
+    source: 'neondb',
+    async healthCheck() {
+      dbCalls += 1;
+      return { connected: true, total_registros: 507 };
+    },
+  };
+
+  // 1 minuto antes del cierre (5 dic 2026, 23:59:00 COT) -> 200 OK
+  const rBefore = await handleApiRequest(
+    new Request('http://localhost:3000/api/health'),
+    spyAdapter,
+    { nowMs: Date.parse('2026-12-05T23:59:00-05:00') }
+  );
+  assert.equal(rBefore.status, 200);
+  const jBefore = await rBefore.json();
+  assert.equal(jBefore.status, 'ok');
+  assert.equal(jBefore.active_until, '2026-12-05T23:59:59-05:00');
+  assert.equal(dbCalls, 1);
+
+  // 1 minuto después del cierre (6 dic 2026, 00:01:00 COT) -> 503 sin tocar la BD
+  const rAfter = await handleApiRequest(
+    new Request('http://localhost:3000/api/health'),
+    spyAdapter,
+    { nowMs: Date.parse('2026-12-06T00:01:00-05:00') }
+  );
+  assert.equal(rAfter.status, 503);
+  const jAfter = await rAfter.json();
+  assert.equal(jAfter.status, 'closed');
+  assert.equal(dbCalls, 1, 'No debe consultar NeonDB después de la fecha límite');
+});

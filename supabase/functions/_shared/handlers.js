@@ -14,6 +14,10 @@ import { STATIC_ML_METRICS, STATIC_NUMERICAL_SERIES } from './static-catalog.js'
 const VALID_VEHICLES = new Set(['TODOS', 'LIVIANO', 'CARGA_PESADO', 'TRANSPORTE_PASAJEROS', 'OTRO']);
 const VALID_MODELS = new Set(['regresion_anual', 'regresion_semestral', 'lagrange']);
 
+// Vigencia oficial: hasta el 5 de diciembre de 2026 a las 23:59:59 hora Colombia (UTC-5)
+export const DEFAULT_ACTIVE_UNTIL = '2026-12-06T04:59:59.000Z';
+const ACTIVE_UNTIL_LABEL = '2026-12-05T23:59:59-05:00';
+
 function corsHeaders(origin = '*') {
   return {
     'Access-Control-Allow-Origin': origin,
@@ -55,6 +59,22 @@ export async function handleApiRequest(request, adapter, options = {}) {
     return new Response(null, { status: 204, headers: corsHeaders(corsOrigin) });
   }
 
+  // Verificar vigencia antes de consultar la base de datos (0 consumo en NeonDB tras el cierre)
+  const cutoffIso = options.activeUntil === undefined ? DEFAULT_ACTIVE_UNTIL : options.activeUntil;
+  const nowMs = typeof options.nowMs === 'number' ? options.nowMs : Date.now();
+  if (cutoffIso && Number.isFinite(Date.parse(cutoffIso)) && nowMs > Date.parse(cutoffIso)) {
+    return jsonResponse(
+      {
+        status: 'closed',
+        service: 'autogest-api',
+        active_until: ACTIVE_UNTIL_LABEL,
+        message: 'La demostración académica AutoGest estuvo disponible hasta el 5 de diciembre de 2026.',
+      },
+      503,
+      corsOrigin
+    );
+  }
+
   const url = new URL(request.url);
   const route = normalizePath(url.pathname);
 
@@ -67,6 +87,7 @@ export async function handleApiRequest(request, adapter, options = {}) {
           status: 'ok',
           service: 'autogest-api',
           db: adapter.source,
+          active_until: ACTIVE_UNTIL_LABEL,
           ...health,
           timestamp: new Date().toISOString(),
         },

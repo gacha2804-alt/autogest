@@ -1,0 +1,37 @@
+name: AutoGest Keep-Alive (hasta 5 dic 2026)
+
+on:
+  schedule:
+    # Solo 4 ejecuciones a las 08:00 COT (13:00 UTC): 25 nov, 28 nov, 1 dic y 4 dic
+    - cron: '0 13 25,28 11 *'
+    - cron: '0 13 1,4 12 *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar fecha límite (máximo 5 de diciembre de 2026)
+        id: check_date
+        run: |
+          NOW_EPOCH=$(date -u +%s)
+          CUTOFF_EPOCH=$(date -u -d "2026-12-06T04:59:59Z" +%s)
+          if [ "$NOW_EPOCH" -gt "$CUTOFF_EPOCH" ]; then
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            echo "Vigencia finalizada (después del 5 dic 2026). No se realizan pings."
+          else
+            echo "active=true" >> "$GITHUB_OUTPUT"
+            echo "Dentro de vigencia académica (hasta el 5 dic 2026)."
+          fi
+
+      - name: Ping AutoGest API (Netlify -> Supabase -> NeonDB)
+        if: steps.check_date.outputs.active == 'true'
+        run: |
+          echo "Verificando https://autogest-ibague.netlify.app/api/health ..."
+          curl -fsS https://autogest-ibague.netlify.app/api/health | tee /dev/stderr
+
+      - name: Ping Heartbeat Supabase Postgres (evita pausa de 7 días)
+        if: steps.check_date.outputs.active == 'true'
+        run: |
+          curl -fsS "https://veakptgthvcqyoomwjdv.supabase.co/rest/v1/autogest_heartbeat?select=id,service,active_until&limit=1" \
+            -H "apikey: sb_publishable_bykNAaFcn5q5GnSNZPM3nA_3VzpT5C1" | tee /dev/stderr
