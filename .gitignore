@@ -1,4 +1,4 @@
-# Entornos virtuales
+# Entornos virtuales Python
 .venv/
 env/
 venv/
@@ -13,16 +13,28 @@ __pycache__/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Sistema Operativo
+# Sistema Operativo e IDE
 .DS_Store
 Thumbs.db
-
-# Temporales de IDE
 .vscode/
 .idea/
 
-# Scratch temporal
+# Variables de entorno y credenciales locales (NUNCA subir a GitHub)
+.env
+.env.*
+!.env.example
+back/.env
+back/.env.*
+!back/.env.example
+
+# Node.js y despliegue Netlify local
+node_modules/
+back/node_modules/
+front/node_modules/
+.netlify/
+
+# Temporales locales
 scratch/
 *.tmp
-__pycache__/
-*.py[cod]
+back/.local-predictions.json
+back/reports/
