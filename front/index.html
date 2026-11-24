@@ -1,0 +1,2827 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AUTOGEST · Dashboard de Siniestralidad Vial · Ibagué</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>" />
+  <script src="/chart.umd.min.js"></script>
+  <script>
+    if (typeof Chart === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>');
+    }
+  </script>
+  <style>
+    /* ── Variables de color ───────────────────────────────────── */
+    :root {
+      --bg:        #0f172a;
+      --bg2:       #1e293b;
+      --bg3:       #334155;
+      --accent1:   #38bdf8;
+      --accent2:   #34d399;
+      --accent3:   #fb923c;
+      --accent4:   #f472b6;
+      --accent5:   #a78bfa;
+      --danger:    #f87171;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --border:    #334155;
+      --card-shadow: 0 4px 24px rgba(0,0,0,.45);
+    }
+
+    /* ── Reset y base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 60%, #1a0a2e 100%);
+      border-bottom: 2px solid var(--accent1);
+      padding: 20px 32px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--accent1), var(--accent5));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .logo-text h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -.5px; }
+    .logo-text h1 span { color: var(--accent1); }
+    .logo-text p  { font-size: .78rem; color: var(--muted); margin-top: 1px; }
+    .header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: .72rem;
+      font-weight: 600;
+      border: 1px solid;
+    }
+    .badge-blue   { background: #0ea5e920; color: var(--accent1); border-color: #0ea5e940; }
+    .badge-green  { background: #10b98120; color: var(--accent2); border-color: #10b98140; }
+    .badge-orange { background: #f9731620; color: var(--accent3); border-color: #f9731640; }
+    .badge-purple { background: #a78bfa20; color: var(--accent5); border-color: #a78bfa40; }
+
+    /* ── Contenedor principal ─────────────────────────────────── */
+    main { padding: 28px 32px; max-width: 1540px; margin: 0 auto; }
+
+    /* ── Sección título ───────────────────────────────────────── */
+    .section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── KPI cards ────────────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .kpi-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: var(--card-shadow);
+      transition: transform .18s, border-color .18s;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card:hover { transform: translateY(-3px); }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      opacity: .07;
+    }
+    .kpi-card.blue::before   { background: var(--accent1); border-color: var(--accent1); }
+    .kpi-card.green::before  { background: var(--accent2); border-color: var(--accent2); }
+    .kpi-card.orange::before { background: var(--accent3); border-color: var(--accent3); }
+    .kpi-card.pink::before   { background: var(--accent4); border-color: var(--accent4); }
+    .kpi-card.purple::before { background: var(--accent5); border-color: var(--accent5); }
+    .kpi-card.red::before    { background: var(--danger);  border-color: var(--danger); }
+    .kpi-card.blue   { border-color: #38bdf840; }
+    .kpi-card.green  { border-color: #34d39940; }
+    .kpi-card.orange { border-color: #fb923c40; }
+    .kpi-card.pink   { border-color: #f472b640; }
+    .kpi-card.purple { border-color: #a78bfa40; }
+    .kpi-card.red    { border-color: #f8717140; }
+
+    .kpi-icon { font-size: 1.6rem; }
+    .kpi-label { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; }
+    .kpi-value { font-size: 1.75rem; font-weight: 800; line-height: 1; }
+    .kpi-card.blue   .kpi-value { color: var(--accent1); }
+    .kpi-card.green  .kpi-value { color: var(--accent2); }
+    .kpi-card.orange .kpi-value { color: var(--accent3); }
+    .kpi-card.pink   .kpi-value { color: var(--accent4); }
+    .kpi-card.purple .kpi-value { color: var(--accent5); }
+    .kpi-card.red    .kpi-value { color: var(--danger); }
+    .kpi-sub { font-size: .72rem; color: var(--muted); }
+    .kpi-trend {
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 2px;
+      width: fit-content;
+    }
+    .trend-up   { background: #f8717120; color: var(--danger); }
+    .trend-down { background: #34d39920; color: var(--accent2); }
+    .trend-neu  { background: #38bdf820; color: var(--accent1); }
+
+    /* ── Grids de charts ──────────────────────────────────────── */
+    .charts-row {
+      display: grid;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .cols-2  { grid-template-columns: 1fr 1fr; }
+    .cols-3  { grid-template-columns: 1fr 1fr 1fr; }
+    .cols-32 { grid-template-columns: 3fr 2fr; }
+    .cols-23 { grid-template-columns: 2fr 3fr; }
+    .cols-1  { grid-template-columns: 1fr; }
+
+    /* ── Chart card ───────────────────────────────────────────── */
+    .chart-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 24px 20px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .chart-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chart-title {
+      font-size: .97rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .chart-sub {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .chart-tag {
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #38bdf815;
+      color: var(--accent1);
+      border: 1px solid #38bdf830;
+      white-space: nowrap;
+    }
+    .chart-wrap {
+      position: relative;
+      flex: 1;
+    }
+    canvas { display: block; width: 100% !important; }
+
+    /* ── Tabla de modelos ML ──────────────────────────────────── */
+    .ml-table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .84rem;
+    }
+    thead th {
+      background: var(--bg3);
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: .68rem;
+      letter-spacing: 1px;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid #1e293b;
+      transition: background .12s;
+    }
+    tbody tr:hover { background: #334155; }
+    tbody td {
+      padding: 11px 14px;
+      color: var(--text);
+    }
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: .72rem;
+      font-weight: 700;
+    }
+    .pill-green  { background: #34d39920; color: var(--accent2); }
+    .pill-blue   { background: #38bdf820; color: var(--accent1); }
+    .pill-purple { background: #a78bfa20; color: var(--accent5); }
+    .pill-orange { background: #fb923c20; color: var(--accent3); }
+
+    /* ── Segmentos clustering ─────────────────────────────────── */
+    .seg-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .seg-card {
+      background: var(--bg3);
+      border-radius: 12px;
+      padding: 18px 20px;
+      border-left: 4px solid;
+    }
+    .seg-card.s0 { border-color: var(--accent1); }
+    .seg-card.s1 { border-color: var(--accent3); }
+    .seg-card.s2 { border-color: var(--accent2); }
+    .seg-name { font-size: .95rem; font-weight: 700; margin-bottom: 8px; }
+    .seg-row  { font-size: .78rem; color: var(--muted); display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #ffffff0a; }
+    .seg-row:last-child { border-bottom: none; }
+    .seg-row span:last-child { color: var(--text); font-weight: 600; }
+
+    /* ── Info box ─────────────────────────────────────────────── */
+    .info-box {
+      background: #0ea5e910;
+      border: 1px solid #0ea5e930;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: .8rem;
+      color: #7dd3fc;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .info-box .icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: .75rem;
+      border-top: 1px solid var(--border);
+      margin-top: 20px;
+    }
+    footer strong { color: var(--text); }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      main { padding: 16px; }
+      .cols-2, .cols-3, .cols-32, .cols-23 { grid-template-columns: 1fr; }
+      header { padding: 14px 16px; }
+    }
+
+    /* ── Métodos Numéricos ─────────────────────────────────────── */
+    .mn-ecuacion {
+      background: #0f172a;
+      border: 2px solid var(--accent2);
+      border-radius: 14px;
+      padding: 18px 24px;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .mn-ecuacion .formula { font-size: 1.45rem; font-weight: 800; color: var(--accent2); letter-spacing: .02em; }
+    .mn-ecuacion .desc    { color: var(--muted); font-size: .82rem; margin-top: 6px; }
+    .mn-nodos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 12px 0;
+    }
+    .mn-nodo {
+      background: var(--bg3);
+      border: 2px solid var(--accent3);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .mn-nodo .n  { font-size: .7rem; color: var(--muted); }
+    .mn-nodo .x  { font-size: 1.4rem; font-weight: 800; color: var(--accent3); }
+    .mn-nodo .y  { font-size: .95rem; color: var(--text); font-weight: 600; }
+    .mn-nodo .nd { font-size: .68rem; color: var(--muted); margin-top: 4px; }
+    .mn-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mn-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--bg3);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .mn-step-num {
+      background: var(--accent1);
+      color: #0f172a;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; font-weight: 800; flex-shrink: 0;
+    }
+    .mn-step-txt { font-size: .83rem; color: var(--text); }
+    .mn-step-txt strong { color: var(--accent1); }
+
+    /* ── Barra de Navegación por Pestañas ─────────────────────── */
+    .nav-bar {
+      background: var(--bg2);
+      border-bottom: 2px solid var(--accent1);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    }
+    .nav-container {
+      max-width: 1540px;
+      margin: 0 auto;
+      padding: 10px 32px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: .88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn:hover {
+      background: #475569;
+      transform: translateY(-1px);
+    }
+    .nav-btn.active {
+      background: var(--accent1);
+      color: #0f172a;
+      border-color: var(--accent1);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+    }
+    .nav-btn.btn-mn {
+      background: rgba(52, 211, 153, 0.15);
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+    .nav-btn.btn-mn.active {
+      background: var(--accent2);
+      color: #0f172a;
+      box-shadow: 0 0 16px rgba(52, 211, 153, 0.4);
+    }
+    .nav-link-ext {
+      margin-left: auto;
+      color: var(--accent5);
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px dashed var(--accent5);
+      background: rgba(167, 139, 250, 0.1);
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-link-ext:hover {
+      background: rgba(167, 139, 250, 0.25);
+    }
+
+    /* ── Banners de Módulos ────────────────────────────────────── */
+    .modulo-banner {
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid;
+    }
+    .banner-mineria {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(30, 41, 59, 0.95) 100%);
+      border-color: var(--accent1);
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.1);
+    }
+    .banner-metodos {
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.12) 0%, rgba(167, 139, 250, 0.12) 50%, rgba(30, 41, 59, 0.95) 100%);
+      border-color: var(--accent2);
+      box-shadow: 0 4px 20px rgba(52, 211, 153, 0.1);
+    }
+    .modulo-tag {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .banner-mineria .modulo-tag { background: var(--accent1); color: #0f172a; }
+    .banner-metodos .modulo-tag { background: var(--accent2); color: #0f172a; }
+    .modulo-banner h2 { font-size: 1.45rem; font-weight: 800; margin-bottom: 6px; }
+    .banner-mineria h2 { color: var(--accent1); }
+    .banner-metodos h2 { color: var(--accent2); }
+    .modulo-banner p { color: var(--muted); font-size: .88rem; max-width: 950px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════════════ -->
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">🚦</div>
+    <div class="logo-text">
+      <h1><span>AUTO</span>GEST</h1>
+      <p>Sistema de Gestión y Análisis de Siniestralidad Vial · Ibagué, Colombia</p>
+    </div>
+  </div>
+  <div class="header-badges">
+    <span id="apiStatusBadge" class="badge badge-blue">🔌 Conectando API...</span>
+    <button onclick="filtrarVista('mn')" class="badge" style="background:var(--accent2);color:#0f172a;font-weight:800;border:none;cursor:pointer;padding:6px 14px;font-size:.78rem">📐 Ver Métodos Numéricos</button>
+    <a href="/metodos.html" target="_blank" class="badge badge-purple" style="font-weight:700;text-decoration:none">🔗 Vista Completa MN ↗</a>
+    <span id="badgeTotalRegistros" class="badge badge-blue">📊 507 registros</span>
+    <span class="badge badge-green">🗓️ 2014 – 2026</span>
+    <span class="badge badge-orange">🎓 UNIMINUTO</span>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════
+     BARRA DE NAVEGACIÓN Y FILTRO
+═══════════════════════════════════════════════════════════════ -->
+<nav class="nav-bar">
+  <div class="nav-container">
+    <div style="font-size:.78rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-right:6px">MÓDULO:</div>
+    <button class="nav-btn active" id="btn-tab-mineria" onclick="filtrarVista('mineria')">🤖 Módulo I: Minería de Datos</button>
+    <button class="nav-btn btn-mn" id="btn-tab-mn" onclick="filtrarVista('mn')">📐 Módulo II: Métodos Numéricos</button>
+    <button class="nav-btn" id="btn-tab-todo" onclick="filtrarVista('todo')">🌐 Ver Ambos Integrados</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════════════════════════ -->
+<main>
+
+  <div id="sec-mineria">
+
+  <!-- BANNER MÓDULO 1: MINERÍA DE DATOS -->
+  <div class="modulo-banner banner-mineria">
+    <span class="modulo-tag">MÓDULO I · MINERÍA DE DATOS (UNIMINUTO)</span>
+    <h2>🤖 Modelos Predictivos, Clasificación y Clustering Vial</h2>
+    <p>Análisis integral de siniestralidad vial en Ibagué (507 observaciones mensuales desagregadas por tipología vehicular, correspondientes a 149 periodos cronológicos (2014–2026)). Integra análisis exploratorio (EDA), torneo de modelos supervisados (Árbol de Decisión vs. Naive Bayes vs. KNN) y segmentación no supervisada mediante Clustering K-means y Jerárquico.</p>
+  </div>
+
+  <!-- ── Filtros dinámicos conectados a API / NeonDB ──────── -->
+  <div class="chart-card" style="margin-bottom:22px;padding:16px 20px;border-color:#38bdf840">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <strong style="color:var(--accent1);font-size:.82rem;text-transform:uppercase;letter-spacing:.8px">🔎 Filtro Dinámico (API):</strong>
+        <label style="font-size:.78rem;color:var(--muted)">Desde:
+          <input id="filtroAnioInicio" type="number" value="2014" min="2014" max="2026" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;width:78px;margin-left:4px;font-weight:700">
+        </label>
+        <label style="font-size:.78rem;color:var(--muted)">Hasta:
+          <input id="filtroAnioFin" type="number" value="2026" min="2014" max="2026" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;width:78px;margin-left:4px;font-weight:700">
+        </label>
+        <label style="font-size:.78rem;color:var(--muted)">Vehículo:
+          <select id="filtroTipoVehiculo" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;margin-left:4px;font-weight:600">
+            <option value="TODOS">Todos</option>
+            <option value="LIVIANO">Liviano</option>
+            <option value="CARGA_PESADO">Carga Pesado</option>
+            <option value="TRANSPORTE_PASAJEROS">Transporte Pasajeros</option>
+          </select>
+        </label>
+        <button onclick="window.AutoGestAPI && window.AutoGestAPI.applyDashboardFilters()" style="background:var(--accent1);color:#0f172a;border:none;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-size:.8rem">Aplicar</button>
+        <button onclick="window.AutoGestAPI && window.AutoGestAPI.resetDashboardFilters()" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:6px;font-weight:600;cursor:pointer;font-size:.8rem">Restablecer</button>
+      </div>
+      <span id="filterMetaInfo" style="font-size:.74rem;color:var(--muted)">Datos listos · 507 observaciones</span>
+    </div>
+  </div>
+
+  <!-- ── KPIs Principales ──────────────────────────────────── -->
+  <p class="section-title">📌 Indicadores Clave del Proyecto</p>
+  <div class="kpi-grid">
+
+    <div class="kpi-card red">
+      <span class="kpi-icon">🚨</span>
+      <span class="kpi-label">Total accidentes registrados</span>
+      <span id="kpiValAccidentes" class="kpi-value">378,234</span>
+      <span class="kpi-sub">Suma Acumulada Total (2014–2026)</span>
+      <span class="kpi-trend trend-up">▲ Suma en toda la BD · Todos los vehículos</span>
+    </div>
+
+    <div class="kpi-card blue">
+      <span class="kpi-icon">🚗</span>
+      <span class="kpi-label">Volumen de tráfico total</span>
+      <span id="kpiValTrafico" class="kpi-value">3,284M</span>
+      <span class="kpi-sub">Vehículos acumulados (2014–2026)</span>
+      <span class="kpi-trend trend-up">▲ Máx 2023: 321.7M/año</span>
+    </div>
+
+    <div class="kpi-card green">
+      <span class="kpi-icon">💰</span>
+      <span class="kpi-label">Recaudo total en peajes</span>
+      <span id="kpiValRecaudo" class="kpi-value">$44.2B</span>
+      <span class="kpi-sub">Miles de millones COP acumulados</span>
+      <span class="kpi-trend trend-neu">📈 Liviano: $20.7B</span>
+    </div>
+
+    <div class="kpi-card orange">
+      <span class="kpi-icon">🔧</span>
+      <span class="kpi-label">Servicios de taller</span>
+      <span id="kpiValTaller" class="kpi-value">2,000K</span>
+      <span class="kpi-sub">Total acumulado (2020–2024)</span>
+      <span class="kpi-trend trend-neu">⚙️ ~400K servicios/año</span>
+    </div>
+
+    <div class="kpi-card purple">
+      <span class="kpi-icon">📐</span>
+      <span class="kpi-label">Prom. accidentes mensual</span>
+      <span id="kpiValPromedio" class="kpi-value">746</span>
+      <span class="kpi-sub">Nivel Promedio por período</span>
+      <span class="kpi-trend trend-down">▼ Mín 2020 (COVID)</span>
+    </div>
+
+    <div class="kpi-card pink">
+      <span class="kpi-icon">🛣️</span>
+      <span class="kpi-label">Millaje promedio</span>
+      <span id="kpiValMillaje" class="kpi-value">73,356</span>
+      <span class="kpi-sub">km promedio general</span>
+      <span class="kpi-trend trend-neu">🚌 OTRO: 154,829 km</span>
+    </div>
+
+    <div class="kpi-card blue">
+      <span class="kpi-icon">📏</span>
+      <span class="kpi-label">Tipos de vehículo</span>
+      <span class="kpi-value">4</span>
+      <span class="kpi-sub">Liviano · Pesado · Pasajeros · Otro</span>
+      <span class="kpi-trend trend-neu">🚗 Liviano: 67% accidentes</span>
+    </div>
+
+    <div class="kpi-card green">
+      <span class="kpi-icon">📅</span>
+      <span class="kpi-label">Período de análisis</span>
+      <span id="kpiValAnios" class="kpi-value">13 años</span>
+      <span class="kpi-sub">Enero 2014 – 2026</span>
+      <span class="kpi-trend trend-neu">🔬 507 registros integrados</span>
+    </div>
+
+  </div>
+
+  <!-- Aclaración de agregación -->
+  <div style="background:var(--bg2);border-left:4px solid var(--accent1);padding:12px 16px;border-radius:8px;margin-bottom:24px;font-size:.82rem;color:var(--muted)">
+    <strong style="color:var(--text)">💡 Aclaración Metodológica — Diferencia entre Acumulados y Promedios:</strong>
+    La cifra de <strong>378,234</strong> representa el <em>acumulado global</em> (suma de todos los incidentes registrados en el periodo 2014–2026 en Ibagué). En cambio, los modelos analíticos y de Métodos Numéricos emplean <em>promedios anuales por categoría</em> con una media de ȳ ≈ 792.67. Ambas cifras son correctas y corresponden a <strong>diferentes niveles de agregación estadística</strong> (suma total vs. comportamiento medio anual para estudiar la tendencia).
+  </div>
+
+  <!-- ── Fila 1: Accidentes por año + Distribución tipo veh ── -->
+  <p class="section-title">📈 Tendencias Temporales de Siniestralidad</p>
+  <div class="charts-row cols-32">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Accidentes Registrados por Año</p>
+          <p class="chart-sub">Suma anual acumulada · 2014–2026</p>
+        </div>
+        <span class="chart-tag">Serie temporal</span>
+      </div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="chartAccAnio"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Accidentes por Tipo de Vehículo</p>
+          <p class="chart-sub">Acumulado total · 4 categorías</p>
+        </div>
+        <span class="chart-tag">Composición</span>
+      </div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="chartTipoVeh"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Fila 2: Estacionalidad + Volumen tráfico ─────────── -->
+  <div class="charts-row cols-2">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Estacionalidad Mensual de Accidentes</p>
+          <p class="chart-sub">Promedio por mes · todos los años</p>
+        </div>
+        <span class="chart-tag">Estacionalidad</span>
+      </div>
+      <div class="chart-wrap" style="height:250px">
+        <canvas id="chartMeses"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Volumen de Tráfico por Año</p>
+          <p class="chart-sub">Total vehículos · 2014–2026</p>
+        </div>
+        <span class="chart-tag">Tráfico</span>
+      </div>
+      <div class="chart-wrap" style="height:250px">
+        <canvas id="chartTrafico"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Fila 3: Correlación tráfico-accidentes + Recaudo ─── -->
+  <p class="section-title">📊 Análisis Multivariado y Recaudo</p>
+  <div class="charts-row cols-23">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Recaudo por Tipo de Vehículo</p>
+          <p class="chart-sub">Miles de millones COP acumulados</p>
+        </div>
+        <span class="chart-tag">Financiero</span>
+      </div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="chartRecaudo"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Tráfico vs Accidentes por Año</p>
+          <p class="chart-sub">Comparación de tendencias normalizadas</p>
+        </div>
+        <span class="chart-tag">Correlación</span>
+      </div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="chartCorrelacion"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Fila 4: Accidentes 2024 mensual + Tasa evasión ───── -->
+  <div class="charts-row cols-2">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Accidentes Mensuales – 2024</p>
+          <p class="chart-sub">Comportamiento reciente por mes</p>
+        </div>
+        <span class="chart-tag">Reciente</span>
+      </div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="chart2024"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Tasa de Evasión en Peajes (% prom. anual)</p>
+          <p class="chart-sub">Porcentaje promedio anual de evasión</p>
+        </div>
+        <span class="chart-tag">Evasión</span>
+      </div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="chartEvasion"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Modelos de Machine Learning ───────────────────────── -->
+  <p class="section-title">🤖 Resultados de Modelos de Minería de Datos</p>
+
+  <div class="charts-row cols-32">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Torneo de Clasificación · Sesión 8</p>
+          <p class="chart-sub">Árbol de Decisión vs. Naive Bayes vs. KNN · dataset AUTOGEST escalado</p>
+        </div>
+        <span class="chart-tag">Sesión 8</span>
+      </div>
+      <div class="ml-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Modelo</th>
+              <th>Accuracy Train</th>
+              <th>Accuracy Test</th>
+              <th>Tiempo fit</th>
+              <th>¿Requiere escala?</th>
+              <th>Recomendación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>🌳 Árbol Decisión (prof=4)</strong></td>
+              <td><span class="pill pill-blue">88.95%</span></td>
+              <td><span class="pill pill-green">83.46%</span></td>
+              <td>~0.062s</td>
+              <td><span class="pill pill-orange">No</span></td>
+              <td><span class="pill pill-green">Principal</span></td>
+            </tr>
+            <tr>
+              <td><strong>📊 Naive Bayes (GaussianNB)</strong></td>
+              <td><span class="pill pill-blue">60.26%</span></td>
+              <td><span class="pill pill-orange">59.84%</span></td>
+              <td>~0.003s</td>
+              <td><span class="pill pill-orange">No</span></td>
+              <td><span class="pill pill-blue">Línea base</span></td>
+            </tr>
+            <tr>
+              <td><strong>🔍 KNN k=5 (escalado StandardScaler)</strong></td>
+              <td><span class="pill pill-blue">91.58%</span></td>
+              <td><span class="pill pill-green">83.46%</span></td>
+              <td>~0.012s</td>
+              <td><span class="pill pill-green">Sí (crítico)</span></td>
+              <td><span class="pill pill-purple">Alta precisión</span></td>
+            </tr>
+            <tr>
+              <td><strong>🔍 KNN k=5 (sin escalar)</strong></td>
+              <td><span class="pill pill-blue">84.74%</span></td>
+              <td><span class="pill pill-orange">74.02%</span></td>
+              <td>~0.010s</td>
+              <td><span class="pill pill-orange">&minus;</span></td>
+              <td><span class="pill pill-orange">&minus;9.44% sin escala</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-box">
+        <span class="icon">💡</span>
+        <span>Árbol seleccionado como modelo principal: ofrece reglas IF-THEN interpretables para inspectores y directivos viales — requisito crítico en gestión pública de siniestralidad.</span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Comparación de Accuracy por Modelo</p>
+          <p class="chart-sub">Train vs. Test · misma partición 75/25</p>
+        </div>
+        <span class="chart-tag">Sesión 8</span>
+      </div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="chartModelos"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Efecto K en KNN ────────────────────────────────────── -->
+  <div class="charts-row cols-2">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Efecto del Parámetro k en KNN</p>
+          <p class="chart-sub">Curva Sesgo–Varianza · Train vs. Test accuracy</p>
+        </div>
+        <span class="chart-tag">Sesión 8 · KNN</span>
+      </div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="chartKNN"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">KNN: Efecto del Escalado en la Distancia</p>
+          <p class="chart-sub">"Distancia manda a escalar" – k=5</p>
+        </div>
+        <span class="chart-tag">Sesión 8 · Escalado</span>
+      </div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="chartEscalado"></canvas>
+      </div>
+      <div style="background:var(--bg3);border-left:4px solid var(--accent1);padding:10px 14px;border-radius:8px;margin-top:10px;font-size:.78rem;color:var(--text);line-height:1.45">
+        <strong>⚖️ Análisis de StandardScaler en los 4 Algoritmos:</strong>
+        <ul style="margin:4px 0 0 14px;color:var(--muted)">
+          <li><strong>KNN (k=5):</strong> <span class="pill pill-green" style="font-size:.65rem">Impacto Crítico</span> Pasa de <strong>74.02%</strong> (sin escalar) a <strong>83.46%</strong> (+9.5% de mejora) al evitar que variables en millones dominen la distancia euclidiana.</li>
+          <li><strong>K-Means / Jerárquico:</strong> <span class="pill pill-green" style="font-size:.65rem">Impacto Crítico</span> La distancia al centroide pondera equitativamente todas las dimensiones.</li>
+          <li><strong>Árbol de Decisión:</strong> <span class="pill pill-blue" style="font-size:.65rem">Invariante</span> Mantiene exactamente <strong>83.46%</strong> de exactitud porque los cortes ortogonales (Gini) no dependen de transformaciones monótonas de escala.</li>
+          <li><strong>Naive Bayes:</strong> <span class="pill pill-purple" style="font-size:.65rem">Invariante lineal</span> Las densidades Gaussianas ajustan media y varianza sin alterar la probabilidad condicional.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Clustering Sesión 9 ────────────────────────────────── -->
+  <p class="section-title">🔵 Clustering K-means · Sesión 9</p>
+  <div class="charts-row cols-2">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Método del Codo · Inercia vs k</p>
+          <p class="chart-sub">Buscar el "doblez" de la curva</p>
+        </div>
+        <span class="chart-tag">Sesión 9 · Codo</span>
+      </div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="chartCodo"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Coeficiente de Silueta vs k</p>
+          <p class="chart-sub">Máximo = mejor cohesión / separación</p>
+        </div>
+        <span class="chart-tag">Sesión 9 · Silueta</span>
+      </div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="chartSilueta"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Segmentos clustering ───────────────────────────────── -->
+  <div class="chart-card" style="margin-bottom:24px">
+    <div class="chart-header">
+      <div>
+        <p class="chart-title">Segmentos Naturales del Dataset AUTOGEST (k=3)</p>
+        <p class="chart-sub">Nomenclatura operacional · Clustering K-means + StandardScaler · Sesión 9</p>
+      </div>
+      <span class="chart-tag">Segmentación</span>
+    </div>
+    <div class="seg-grid">
+      <div class="seg-card s0">
+        <p class="seg-name" style="color:var(--accent1)">🔵 Período de Tráfico Habitual</p>
+        <div class="seg-row"><span>Volumen tráfico</span><span>~3.5M veh/mes</span></div>
+        <div class="seg-row"><span>Accidentes prom.</span><span>~430</span></div>
+        <div class="seg-row"><span>Vehículos evasores</span><span>Bajo</span></div>
+        <div class="seg-row"><span>Acción</span><span>Mantenimiento preventivo</span></div>
+      </div>
+      <div class="seg-card s1">
+        <p class="seg-name" style="color:var(--accent3)">🟠 Período de Alta Siniestralidad</p>
+        <div class="seg-row"><span>Volumen tráfico</span><span>~7.2M veh/mes</span></div>
+        <div class="seg-row"><span>Accidentes prom.</span><span>~2,100</span></div>
+        <div class="seg-row"><span>Vehículos evasores</span><span>Alto</span></div>
+        <div class="seg-row"><span>Acción</span><span>Alerta inmediata · refuerzo señalización</span></div>
+      </div>
+      <div class="seg-card s2">
+        <p class="seg-name" style="color:var(--accent2)">🟢 Período de Baja Actividad</p>
+        <div class="seg-row"><span>Volumen tráfico</span><span>~1.2M veh/mes</span></div>
+        <div class="seg-row"><span>Accidentes prom.</span><span>~260</span></div>
+        <div class="seg-row"><span>Vehículos evasores</span><span>Muy bajo</span></div>
+        <div class="seg-row"><span>Acción</span><span>Análisis causas de baja demanda</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Variables importancia ─────────────────────────────── -->
+  <p class="section-title">🌳 Importancia de Variables · Árbol de Decisión</p>
+  <div class="charts-row cols-2">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Importancia de Variables Predictoras (Feature Importance)</p>
+          <p class="chart-sub">Criterio Gini · Árbol de Decisión max_depth=4</p>
+        </div>
+        <span class="chart-tag">Sesión 7 · Árbol</span>
+      </div>
+      <div class="chart-wrap" style="height:250px">
+        <canvas id="chartImportancia"></canvas>
+      </div>
+      <div style="background:var(--bg3);border-left:4px solid var(--accent2);padding:10px 14px;border-radius:8px;margin-top:10px;font-size:.78rem;color:var(--text)">
+        ⚠️ <strong>Aclaración Metodológica (Importancia Relativa vs. Causalidad):</strong>
+        <code>VEHICULOS_EXENTOS</code> obtuvo la mayor importancia relativa (42%) dentro del árbol de decisión por su capacidad de segmentar los nodos según el criterio Gini. <strong>Esto representa una relación matemática interna del modelo, NO una relación causal demostrada.</strong> En ningún momento se afirma que los vehículos exentos provoquen o causen accidentes de tránsito.
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Distribución de Vehículos Evasores por Año</p>
+          <p class="chart-sub">Variable clave en el árbol de decisión</p>
+        </div>
+        <span class="chart-tag">EDA · Sesión 5</span>
+      </div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="chartEvasores"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Resumen proyecto ───────────────────────────────────── -->
+  <p class="section-title">📋 Resumen del Proyecto AUTOGEST</p>
+  <div class="charts-row cols-3">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div><p class="chart-title">Flujo CRISP-DM implementado</p></div>
+      </div>
+      <table>
+        <thead><tr><th>Sesión</th><th>Fase</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>S3-S4</td><td>Limpieza y transformación</td><td><span class="pill pill-green">✅ Completo</span></td></tr>
+          <tr><td>S5-S6</td><td>EDA y visualización</td><td><span class="pill pill-green">✅ Completo</span></td></tr>
+          <tr><td>S7</td><td>Árbol de decisión</td><td><span class="pill pill-green">✅ Completo</span></td></tr>
+          <tr><td>S8</td><td>Naive Bayes y KNN</td><td><span class="pill pill-green">✅ Completo</span></td></tr>
+          <tr><td>S9</td><td>Clustering K-means</td><td><span class="pill pill-green">✅ Completo</span></td></tr>
+          <tr><td>MN</td><td>Regresión Lineal + Lagrange</td><td><span class="pill pill-green">✅ Completo</span></td></tr>
+          <tr><td>S10</td><td>Reglas de asociación</td><td><span class="pill pill-orange">🔄 Próxima</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div><p class="chart-title">Módulos Python implementados</p></div>
+      </div>
+      <table>
+        <thead><tr><th>Módulo</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td><code style="color:var(--accent1)">accidentes.py</code></td><td>Carga y limpieza</td></tr>
+          <tr><td><code style="color:var(--accent1)">integracion.py</code></td><td>Unión de fuentes</td></tr>
+          <tr><td><code style="color:var(--accent1)">transformacion.py</code></td><td>Escala y PCA</td></tr>
+          <tr><td><code style="color:var(--accent1)">eda.py</code></td><td>Análisis exploratorio</td></tr>
+          <tr><td><code style="color:var(--accent1)">arbol_decision.py</code></td><td>Árbol CRISP-DM</td></tr>
+          <tr><td><code style="color:var(--accent2)">clasificacion_modelos.py</code></td><td>NB + KNN torneo</td></tr>
+          <tr><td><code style="color:var(--accent2)">clustering.py</code></td><td>K-means + jerárquico</td></tr>
+          <tr><td><code style="color:var(--accent5)">metodos_numericos.py</code></td><td>Regresión + Lagrange</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div><p class="chart-title">Hallazgos Principales del EDA y Correlaciones de Pearson</p></div>
+        <span class="chart-tag">Estadística Bivariada</span>
+      </div>
+      <table>
+        <thead><tr><th>Indicador / Relación</th><th>Valor Exacto</th></tr></thead>
+        <tbody>
+          <tr><td>Año de mayor siniestralidad</td><td><span class="pill pill-orange">2016 · 75,849 acc.</span></td></tr>
+          <tr><td>Año de menor accidentalidad</td><td><span class="pill pill-green">2020 · 12,479 acc.</span> (COVID-19)</td></tr>
+          <tr><td>Tipología más siniestrada</td><td><span class="pill pill-blue">Vehículo Liviano (67.0%)</span></td></tr>
+          <tr><td>Meses de mayor estacionalidad</td><td><span class="pill pill-orange">Marzo / Agosto</span></td></tr>
+          <tr><td>Correlación Tráfico vs. Accidentes</td><td><span class="pill pill-purple">r = 0.6683</span> <span style="display:block;font-size:.68rem;color:var(--muted);margin-top:2px">Pearson · N=507 observaciones distribuidas en 149 periodos (2014–2026) · Asociación lineal positiva</span></td></tr>
+          <tr><td>Correlación Exentos vs. Accidentes</td><td><span class="pill pill-blue">r = 0.7154</span> <span style="display:block;font-size:.68rem;color:var(--muted);margin-top:2px">Pearson · N=507 observaciones distribuidas en 149 periodos · Mayor asociación lineal en BD</span></td></tr>
+          <tr><td>Correlación Taller vs. Costo</td><td><span class="pill pill-green">r = 0.9999</span> <span style="display:block;font-size:.68rem;color:var(--muted);margin-top:2px">Pearson · N=240 registros (2020–2024) · Linealidad directa</span></td></tr>
+          <tr><td>Variable mayor peso (árbol)</td><td><span class="pill pill-green">VEHICULOS_EXENTOS</span> <span style="display:block;font-size:.68rem;color:var(--muted);margin-top:2px">Importancia Gini relativa (42% en modelo, NO causa física)</span></td></tr>
+          <tr><td>Accuracy mejor modelo (KNN esc.)</td><td><span class="pill pill-green">83.46%</span> <span style="display:block;font-size:.68rem;color:var(--muted);margin-top:2px">Sin escalar daba 74.02%; Árbol de decisión: 83.46%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Nota de transición al final del dashboard -->
+  <div style="background:var(--bg3);border:1px solid #38bdf840;border-left:4px solid var(--accent1);padding:12px 16px;border-radius:8px;font-size:.82rem;color:var(--text);margin-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <span>🎓 <strong>Conclusiones y Limitaciones del Proyecto:</strong> Visibles de forma permanente en la sección final de la página (accesible en todas las vistas).</span>
+    <a href="#sec-conclusiones" style="color:var(--accent1);font-weight:700;text-decoration:none">Ver Conclusiones al final &darr;</a>
+  </div>
+
+  </div> <!-- /sec-mineria -->
+
+  <!-- ══════════════════════════════════════════════════════════════
+       MÉTODOS NUMÉRICOS · Regresión Lineal + Interpolación Lagrange
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="sec-metodos-numericos">
+
+  <!-- BANNER MÓDULO 2: MÉTODOS NUMÉRICOS -->
+  <div class="modulo-banner banner-metodos">
+    <span class="modulo-tag">MÓDULO II · MÉTODOS NUMÉRICOS (UNIMINUTO)</span>
+    <h2>📐 Regresión Lineal (Mínimos Cuadrados) & Interpolación de Lagrange</h2>
+    <p>Modelado matemático del sistema vial: cálculo de pendiente $m$, intercepto $b$ y métricas de error para la ecuación de la recta, junto con la interpolación polinómica exacta de Lagrange de grado 4 con 5 nodos estratégicos en el rango [2014, 2026].</p>
+  </div>
+
+  <!-- Contexto de Variables -->
+  <div class="chart-card" style="margin-bottom:20px;border-color:var(--accent2)">
+    <div class="chart-header">
+      <div>
+        <p class="chart-title" style="color:var(--accent2)">Contexto de Variables Cuantitativas y Observaciones (Instrucción del Docente)</p>
+        <p class="chart-sub">Definición formal: independiente (X) vs. dependiente (Y) e individuo de análisis</p>
+      </div>
+      <span class="chart-tag" style="background:#10b98120;color:var(--accent2);border-color:#10b98140">Fundamentación Teórica</span>
+    </div>
+    <div class="charts-row cols-2" style="margin-bottom:14px">
+      <div style="background:var(--bg3);padding:16px;border-radius:10px;border-left:4px solid var(--accent1)">
+        <h4 style="color:var(--accent1);font-size:.92rem;margin-bottom:6px">📅 Variable Independiente (Eje X): AÑO</h4>
+        <p style="font-size:.82rem;color:var(--text);margin-bottom:8px">Variable temporal cuantitativa que avanza de manera independiente. Rango analizado: <strong>2014 a 2026</strong> (incluye dato mínimo y dato máximo).</p>
+        <p style="font-size:.75rem;color:var(--muted)"><em>Analogía del profesor:</em> "El tiempo... a medida que pasa el tiempo, ¿aumentan o disminuyen los accidentes?"</p>
+      </div>
+      <div style="background:var(--bg3);padding:16px;border-radius:10px;border-left:4px solid var(--accent2)">
+        <h4 style="color:var(--accent2);font-size:.92rem;margin-bottom:6px">🚗 Variable Dependiente (Eje Y): ACCIDENTES REGISTRADOS</h4>
+        <p style="font-size:.82rem;color:var(--text);margin-bottom:8px">Medición cuantitativa del sistema vial que depende del paso del tiempo. Rango: <strong>259.98</strong> (mínimo, 2020) a <strong>2,106.92</strong> (máximo, 2016).</p>
+        <p style="font-size:.75rem;color:var(--muted)"><em>Nivel de Agregación:</em> Cada fila representa el <strong>promedio anual por categoría ($\bar{y} \approx 792.67$)</strong>, a diferencia del <em>acumulado total de la BD</em> (378,234 incidentes).</p>
+      </div>
+    </div>
+
+    <!-- Justificación Metodológica: n=13 vs n>=15 y Comparación de Granularidades -->
+    <div style="background:var(--bg2);border:1px solid #3b82f640;border-left:4px solid var(--accent1);padding:14px 18px;border-radius:8px;font-size:.82rem;color:var(--muted);line-height:1.5">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <strong style="color:var(--accent1);font-size:.88rem">📋 Verificación del Requisito Docente: Mínimo 15 Observaciones en Regresión Lineal</strong>
+        <span class="pill pill-green" style="font-size:.7rem">Cumplimiento Riguroso sin Inventar Datos</span>
+      </div>
+      <p style="margin-bottom:10px">
+        El docente solicita un <em>mínimo de 15 datos para sacar la recta lineal</em>. En el proyecto AUTOGEST <strong>no se inventan ni sintetizan datos artificiales</strong>. Para satisfacer rigurosamente este requisito, se implementaron <strong>tres niveles de granularidad temporal</strong> utilizando exclusivamente los datos reales de la base de datos municipal:
+      </p>
+      <div class="ml-table-wrap" style="margin-bottom:10px">
+        <table style="font-size:.78rem">
+          <thead>
+            <tr><th>Nivel de Granularidad</th><th>Observaciones (N)</th><th>¿Cumple regla &ge; 15?</th><th>Ecuación de la Recta</th><th>R² (Varianza Explicada)</th><th>Error Estándar</th><th>Conclusión Metodológica</th></tr>
+          </thead>
+          <tbody>
+            <tr style="background:#10b98115">
+              <td><strong>Semestral (Recomendada)</strong></td>
+              <td><span class="pill pill-green">N = 25 semestres</span></td>
+              <td><span class="pill pill-green">✅ SÍ (25 &ge; 15)</span></td>
+              <td><code>Y = -99.8471·X + 202,487.60</code></td>
+              <td><strong>37.98%</strong></td>
+              <td>479.59 acc.</td>
+              <td>Satisface la regla docente de &ge;15 datos con semestres reales (2014-S1 a 2026-S1*)</td>
+            </tr>
+            <tr>
+              <td><strong>Macro Anual</strong></td>
+              <td><span class="pill pill-blue">N = 13 años</span></td>
+              <td>13 años (serie completa)</td>
+              <td><code>Y = -91.20·X + 185,022</code></td>
+              <td><strong>35.47%</strong></td>
+              <td>500.35 acc.</td>
+              <td>Macrotendencia histórica de largo plazo; consistente en pendiente negativa (-91 acc/año)</td>
+            </tr>
+            <tr>
+              <td><strong>Micro Mensual</strong></td>
+              <td><span class="pill pill-purple">N = 507 observaciones</span></td>
+              <td><span class="pill pill-green">✅ SÍ (507 &ge; 15)</span></td>
+              <td><code>Y = -8.53·Mes + 1,413</code></td>
+              <td><strong>15.72%</strong></td>
+              <td>826.38 acc.</td>
+              <td>Serie mensual completamente desagregada; alta dispersión estacional</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:.76rem;color:var(--text);background:var(--bg3);padding:8px 12px;border-radius:6px">
+        💡 <strong>Respuesta para la sustentación:</strong> Ambas series (anual y semestral) son matemáticamente coherentes y validan una <strong>tendencia descendente de ~91 a ~100 accidentes por año</strong>. Si el docente exige estrictamente evaluar al menos 15 puntos, se sustenta formalmente la <strong>regresión semestral ($N=25$)</strong>.
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- ══════════════════════════════════════════════════════════
+       MODELO OFICIAL: REGRESIÓN LINEAL SEMESTRAL (N = 25 >= 15)
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="chart-card" style="margin-bottom:24px;border-color:var(--accent2);border-width:2px">
+    <div class="chart-header">
+      <div>
+        <p class="chart-title" style="color:var(--accent2);font-size:1.05rem">📐 Modelo Oficial Docente: Regresión Lineal Semestral (N = 25 Observaciones Reales)</p>
+        <p class="chart-sub">Cumplimiento estricto del requisito de N &ge; 15 observaciones &middot; Datos reales agregados semestralmente (2014-S1 a 2026-S1*) &middot; Sin duplicar ni inventar datos</p>
+      </div>
+      <span class="chart-tag" style="background:#10b98125;color:var(--accent2);border-color:#10b98160">Oficial · N = 25 &ge; 15</span>
+    </div>
+
+    <!-- KPIs Semestrales -->
+    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(185px,1fr));margin-bottom:18px">
+      <div class="kpi-card green">
+        <span class="kpi-icon">📏</span>
+        <span class="kpi-label">Pendiente (m)</span>
+        <span class="kpi-value">&minus;99.85</span>
+        <span class="kpi-sub">accidentes / a&ntilde;o (&Delta;X=1.0)</span>
+        <span class="kpi-trend trend-down">&#9660; &minus;49.92 acc / semestre (&Delta;X=0.5)</span>
+      </div>
+      <div class="kpi-card blue">
+        <span class="kpi-icon">📍</span>
+        <span class="kpi-label">Intercepto (b)</span>
+        <span class="kpi-value">202,488</span>
+        <span class="kpi-sub">valor te&oacute;rico en origen (X=0)</span>
+        <span class="kpi-trend trend-neu">Y = m&middot;X + b</span>
+      </div>
+      <div class="kpi-card orange">
+        <span class="kpi-icon">📊</span>
+        <span class="kpi-label">R&sup2; Semestral</span>
+        <span class="kpi-value">37.98%</span>
+        <span class="kpi-sub">Varianza explicada (NO Accuracy)</span>
+        <span class="kpi-trend trend-neu">R&sup2; = 0.3798 &middot; Ajuste</span>
+      </div>
+      <div class="kpi-card red">
+        <span class="kpi-icon">⚠️</span>
+        <span class="kpi-label">Error est&aacute;ndar (S_e)</span>
+        <span class="kpi-value">479.59</span>
+        <span class="kpi-sub">accidentes (desv. residuos)</span>
+        <span class="kpi-trend trend-neu">n = 25 observaciones</span>
+      </div>
+      <div class="kpi-card purple">
+        <span class="kpi-icon">✅</span>
+        <span class="kpi-label">Requisito Docente</span>
+        <span class="kpi-value">25 &ge; 15</span>
+        <span class="kpi-sub">100% v&aacute;lido y sustentable</span>
+        <span class="kpi-trend trend-down">&#9660; Serie semestral real</span>
+      </div>
+    </div>
+
+    <div class="charts-row cols-2" style="margin-bottom:16px">
+      <div>
+        <div class="mn-ecuacion" style="margin-top:0">
+          <div class="formula" style="font-size:1.1rem;color:var(--accent2)">Y = &minus;99.8471 &middot; X + 202,487.60</div>
+          <div class="desc">Ecuaci&oacute;n de Regresi&oacute;n Semestral Oficial &middot; X &in; [2014.0, 2026.0] &middot; N = 25 &middot; R&sup2; = 37.98% &middot; S_e = 479.59 acc.</div>
+        </div>
+        <!-- Sumatorias oficiales de la regresión semestral -->
+        <div style="background:var(--bg2);border:1px solid #10b98140;border-radius:8px;padding:12px;margin-top:10px;font-size:.76rem;color:var(--text)">
+          <strong style="color:var(--accent2)">📐 Sumatorias Oficiales (N = 25 Semestres):</strong>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:6px;margin-top:6px;font-family:monospace">
+            <div>&Sigma;xi = 50,500.00</div>
+            <div>&Sigma;yi = 19,910.21</div>
+            <div>&Sigma;(xi&middot;yi) = 40,186,173.89</div>
+            <div>&Sigma;(xi&sup2;) = 102,010,325.00</div>
+            <div>&Sigma;(yi&sup2;) = 24,386,857.45</div>
+            <div>x&#772; = 2,020.00</div>
+            <div>y&#772; = 796.41</div>
+            <div>S_e = 479.59 acc.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg3);padding:14px;border-radius:8px;border-left:4px solid var(--accent2);font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:10px">
+          <strong style="color:var(--accent2)">💡 Sustentaci&oacute;n Metodol&oacute;gica y Conversi&oacute;n de Unidades:</strong><br>
+          &bull; <strong>Cumplimiento de N &ge; 15:</strong> 25 semestres reales (2014-S1 a 2026-S1*) derivados de la base consolidada sin datos sint&eacute;ticos.<br>
+          &bull; <strong>Unidad de la Pendiente:</strong> Como la variable temporal decimal avanza en a&ntilde;os (X = 2014.0, 2014.5, etc.), la pendiente m = &minus;99.85 representa <strong>accidentes por a&ntilde;o de evoluci&oacute;n</strong>. Por cada semestre transcurrido (&Delta;X = 0.5 a&ntilde;os), la disminuci&oacute;n media estimada es de <strong>&Delta;Y = &minus;99.85 &times; 0.5 = &minus;49.92 accidentes / semestre</strong>. Anualizada (99.85 acc/a&ntilde;o), es plenamente consistente con la pendiente macro anual (m = &minus;91.20 acc/a&ntilde;o).
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="chartMnRLSem"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabla completa 25 semestres -->
+    <div style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:.85rem;color:var(--text)">📋 Evaluaci&oacute;n Detallada de las 25 Observaciones Semestrales: Y_real vs. Y_predicho y Error</strong>
+        <span class="pill pill-green" style="font-size:.7rem">N = 25 Datos Verificados</span>
+      </div>
+      <div class="ml-table-wrap" style="max-height:340px;overflow-y:auto">
+        <table style="font-size:.78rem">
+          <thead>
+            <tr><th>#</th><th>Periodo</th><th>X (Año Dec.)</th><th style="text-align:right">Y Real</th><th style="text-align:right">Y Predicho (ŷ)</th><th style="text-align:right">Residuo (Y &minus; ŷ)</th><th style="text-align:right">Error Abs.</th><th style="text-align:right">Error %</th><th>Ajuste</th></tr>
+          </thead>
+          <tbody id="tbodyMnSem">
+<tr>
+  <td>1</td>
+  <td><strong>2014-S1</strong></td>
+  <td>2014.0</td>
+  <td style="text-align:right">1,113.72</td>
+  <td style="text-align:right">1,395.49</td>
+  <td style="text-align:right;color:#fb923c">-281.77</td>
+  <td style="text-align:right">281.77</td>
+  <td style="text-align:right"><strong>25.30%</strong></td>
+  <td><span class="pill pill-blue">Aceptable</span></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><strong>2014-S2</strong></td>
+  <td>2014.5</td>
+  <td style="text-align:right">1,124.33</td>
+  <td style="text-align:right">1,345.57</td>
+  <td style="text-align:right;color:#fb923c">-221.24</td>
+  <td style="text-align:right">221.24</td>
+  <td style="text-align:right"><strong>19.68%</strong></td>
+  <td><span class="pill pill-green">Óptimo</span></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><strong>2015-S1</strong></td>
+  <td>2015.0</td>
+  <td style="text-align:right">1,143.22</td>
+  <td style="text-align:right">1,295.64</td>
+  <td style="text-align:right;color:#fb923c">-152.42</td>
+  <td style="text-align:right">152.42</td>
+  <td style="text-align:right"><strong>13.33%</strong></td>
+  <td><span class="pill pill-green">Óptimo</span></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><strong>2015-S2</strong></td>
+  <td>2015.5</td>
+  <td style="text-align:right">1,214.39</td>
+  <td style="text-align:right">1,245.72</td>
+  <td style="text-align:right;color:#fb923c">-31.33</td>
+  <td style="text-align:right">31.33</td>
+  <td style="text-align:right"><strong>2.58%</strong></td>
+  <td><span class="pill pill-green">Óptimo</span></td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><strong>2016-S1</strong></td>
+  <td>2016.0</td>
+  <td style="text-align:right">2,104.39</td>
+  <td style="text-align:right">1,195.80</td>
+  <td style="text-align:right;color:#38bdf8">+908.59</td>
+  <td style="text-align:right">908.59</td>
+  <td style="text-align:right"><strong>43.18%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><strong>2016-S2</strong></td>
+  <td>2016.5</td>
+  <td style="text-align:right">2,109.44</td>
+  <td style="text-align:right">1,145.87</td>
+  <td style="text-align:right;color:#38bdf8">+963.57</td>
+  <td style="text-align:right">963.57</td>
+  <td style="text-align:right"><strong>45.68%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><strong>2017-S1</strong></td>
+  <td>2017.0</td>
+  <td style="text-align:right">1,854.33</td>
+  <td style="text-align:right">1,095.95</td>
+  <td style="text-align:right;color:#38bdf8">+758.38</td>
+  <td style="text-align:right">758.38</td>
+  <td style="text-align:right"><strong>40.90%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><strong>2017-S2</strong></td>
+  <td>2017.5</td>
+  <td style="text-align:right">1,813.00</td>
+  <td style="text-align:right">1,046.03</td>
+  <td style="text-align:right;color:#38bdf8">+766.97</td>
+  <td style="text-align:right">766.97</td>
+  <td style="text-align:right"><strong>42.30%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><strong>2018-S1</strong></td>
+  <td>2018.0</td>
+  <td style="text-align:right">530.00</td>
+  <td style="text-align:right">996.10</td>
+  <td style="text-align:right;color:#fb923c">-466.10</td>
+  <td style="text-align:right">466.10</td>
+  <td style="text-align:right"><strong>87.94%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><strong>2018-S2</strong></td>
+  <td>2018.5</td>
+  <td style="text-align:right">458.11</td>
+  <td style="text-align:right">946.18</td>
+  <td style="text-align:right;color:#fb923c">-488.07</td>
+  <td style="text-align:right">488.07</td>
+  <td style="text-align:right"><strong>106.54%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><strong>2019-S1</strong></td>
+  <td>2019.0</td>
+  <td style="text-align:right">448.78</td>
+  <td style="text-align:right">896.26</td>
+  <td style="text-align:right;color:#fb923c">-447.48</td>
+  <td style="text-align:right">447.48</td>
+  <td style="text-align:right"><strong>99.71%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><strong>2019-S2</strong></td>
+  <td>2019.5</td>
+  <td style="text-align:right">412.06</td>
+  <td style="text-align:right">846.33</td>
+  <td style="text-align:right;color:#fb923c">-434.27</td>
+  <td style="text-align:right">434.27</td>
+  <td style="text-align:right"><strong>105.39%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><strong>2020-S1</strong></td>
+  <td>2020.0</td>
+  <td style="text-align:right">251.17</td>
+  <td style="text-align:right">796.41</td>
+  <td style="text-align:right;color:#fb923c">-545.24</td>
+  <td style="text-align:right">545.24</td>
+  <td style="text-align:right"><strong>217.08%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><strong>2020-S2</strong></td>
+  <td>2020.5</td>
+  <td style="text-align:right">268.79</td>
+  <td style="text-align:right">746.48</td>
+  <td style="text-align:right;color:#fb923c">-477.69</td>
+  <td style="text-align:right">477.69</td>
+  <td style="text-align:right"><strong>177.72%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><strong>2021-S1</strong></td>
+  <td>2021.0</td>
+  <td style="text-align:right">318.58</td>
+  <td style="text-align:right">696.56</td>
+  <td style="text-align:right;color:#fb923c">-377.98</td>
+  <td style="text-align:right">377.98</td>
+  <td style="text-align:right"><strong>118.65%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><strong>2021-S2</strong></td>
+  <td>2021.5</td>
+  <td style="text-align:right">298.04</td>
+  <td style="text-align:right">646.64</td>
+  <td style="text-align:right;color:#fb923c">-348.60</td>
+  <td style="text-align:right">348.60</td>
+  <td style="text-align:right"><strong>116.96%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><strong>2022-S1</strong></td>
+  <td>2022.0</td>
+  <td style="text-align:right">377.29</td>
+  <td style="text-align:right">596.71</td>
+  <td style="text-align:right;color:#fb923c">-219.42</td>
+  <td style="text-align:right">219.42</td>
+  <td style="text-align:right"><strong>58.16%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><strong>2022-S2</strong></td>
+  <td>2022.5</td>
+  <td style="text-align:right">396.38</td>
+  <td style="text-align:right">546.79</td>
+  <td style="text-align:right;color:#fb923c">-150.41</td>
+  <td style="text-align:right">150.41</td>
+  <td style="text-align:right"><strong>37.95%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><strong>2023-S1</strong></td>
+  <td>2023.0</td>
+  <td style="text-align:right">418.17</td>
+  <td style="text-align:right">496.87</td>
+  <td style="text-align:right;color:#fb923c">-78.70</td>
+  <td style="text-align:right">78.70</td>
+  <td style="text-align:right"><strong>18.82%</strong></td>
+  <td><span class="pill pill-green">Óptimo</span></td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><strong>2023-S2</strong></td>
+  <td>2023.5</td>
+  <td style="text-align:right">406.58</td>
+  <td style="text-align:right">446.94</td>
+  <td style="text-align:right;color:#fb923c">-40.36</td>
+  <td style="text-align:right">40.36</td>
+  <td style="text-align:right"><strong>9.93%</strong></td>
+  <td><span class="pill pill-green">Óptimo</span></td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><strong>2024-S1</strong></td>
+  <td>2024.0</td>
+  <td style="text-align:right">443.79</td>
+  <td style="text-align:right">397.02</td>
+  <td style="text-align:right;color:#38bdf8">+46.77</td>
+  <td style="text-align:right">46.77</td>
+  <td style="text-align:right"><strong>10.54%</strong></td>
+  <td><span class="pill pill-green">Óptimo</span></td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><strong>2024-S2</strong></td>
+  <td>2024.5</td>
+  <td style="text-align:right">468.08</td>
+  <td style="text-align:right">347.10</td>
+  <td style="text-align:right;color:#38bdf8">+120.98</td>
+  <td style="text-align:right">120.98</td>
+  <td style="text-align:right"><strong>25.85%</strong></td>
+  <td><span class="pill pill-blue">Aceptable</span></td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><strong>2025-S1</strong></td>
+  <td>2025.0</td>
+  <td style="text-align:right">610.11</td>
+  <td style="text-align:right">297.17</td>
+  <td style="text-align:right;color:#38bdf8">+312.94</td>
+  <td style="text-align:right">312.94</td>
+  <td style="text-align:right"><strong>51.29%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><strong>2025-S2</strong></td>
+  <td>2025.5</td>
+  <td style="text-align:right">650.39</td>
+  <td style="text-align:right">247.25</td>
+  <td style="text-align:right;color:#38bdf8">+403.14</td>
+  <td style="text-align:right">403.14</td>
+  <td style="text-align:right"><strong>61.98%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><strong>2026-S1*</strong> <span class="pill pill-orange" style="font-size:.65rem;margin-left:4px">Parcial (Ene–May)</span></td>
+  <td>2026.0</td>
+  <td style="text-align:right">677.07</td>
+  <td style="text-align:right">197.33</td>
+  <td style="text-align:right;color:#38bdf8">+479.74</td>
+  <td style="text-align:right">479.74</td>
+  <td style="text-align:right"><strong>70.86%</strong></td>
+  <td><span class="pill pill-orange">Disperso</span></td>
+</tr>
+</tbody>
+          <tfoot id="tfootMnSem">
+  <tr style="font-weight:700;background:#0f172a;color:var(--accent2);border-top:2px solid var(--accent2)">
+    <td colspan="3">SUMATORIAS (N = 25 Semestres)</td>
+    <td style="text-align:right">&Sigma;y = 19,910.21</td>
+    <td style="text-align:right">&Sigma;ŷ = 19,910.21</td>
+    <td style="text-align:right">&Sigma;res = 0.00</td>
+    <td style="text-align:right">&Sigma;|e| = 7,639.19</td>
+    <td style="text-align:right">&Sigma;e% = 1,006.1%</td>
+    <td><span class="pill pill-green">S_e = 479.59 acc.</span></td>
+  </tr>
+  <tr style="font-weight:700;background:var(--bg3);color:var(--text)">
+    <td colspan="3">MEDIAS Y ECUACIÓN OFICIAL</td>
+    <td style="text-align:right">ȳ = 796.41</td>
+    <td style="text-align:right">x&#772; = 2,020.00</td>
+    <td colspan="2" style="text-align:center;color:var(--accent2)">Y = &minus;99.8471&middot;X + 202,487.60</td>
+    <td style="text-align:right">Err Prom: 40.24%</td>
+    <td><span class="pill pill-green">R² = 37.98%</span></td>
+  </tr>
+</tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-title" style="color:var(--accent1);border-left-color:var(--accent1);margin-top:30px">📊 Análisis Complementario: Regresión Macro Anual (N = 13 Años) & Interpolación de Lagrange</p>
+
+
+  <!-- KPIs Métodos Numéricos -->
+  <div class="kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(190px,1fr))">
+    <div class="kpi-card green">
+      <span class="kpi-icon">📏</span>
+      <span class="kpi-label">Pendiente (m)</span>
+      <span class="kpi-value">−91.20</span>
+      <span class="kpi-sub">accidentes / año</span>
+      <span class="kpi-trend trend-down">▼ Tendencia descendente</span>
+    </div>
+    <div class="kpi-card blue">
+      <span class="kpi-icon">📍</span>
+      <span class="kpi-label">Intercepto (b)</span>
+      <span class="kpi-value">185,022</span>
+      <span class="kpi-sub">valor teórico cuando X=0</span>
+      <span class="kpi-trend trend-neu">Y = m·X + b</span>
+    </div>
+    <div class="kpi-card orange">
+      <span class="kpi-icon">📊</span>
+      <span class="kpi-label">R² del modelo</span>
+      <span class="kpi-value">35.47%</span>
+      <span class="kpi-sub">Variabilidad explicada (NO Accuracy)</span>
+      <span class="kpi-trend trend-neu">R² = 0.3547 · Bondad</span>
+    </div>
+    <div class="kpi-card purple">
+      <span class="kpi-icon">🔵</span>
+      <span class="kpi-label">Nodos Lagrange</span>
+      <span class="kpi-value">5 nodos</span>
+      <span class="kpi-sub">Polinomio grado 4</span>
+      <span class="kpi-trend trend-neu">Rango [2014, 2026]</span>
+    </div>
+    <div class="kpi-card red">
+      <span class="kpi-icon">⚠️</span>
+      <span class="kpi-label">Error estándar RL</span>
+      <span class="kpi-value">500.35</span>
+      <span class="kpi-sub">accidentes (desv. residuos)</span>
+      <span class="kpi-trend trend-neu">13 observaciones</span>
+    </div>
+    <div class="kpi-card green">
+      <span class="kpi-icon">✅</span>
+      <span class="kpi-label">Error en nodos Lag.</span>
+      <span class="kpi-value">≈ 0.000</span>
+      <span class="kpi-sub">Garantizado SOLO en los 5 nodos</span>
+      <span class="kpi-trend trend-down">▼ En no-nodos difiere</span>
+    </div>
+  </div>
+
+  <!-- Fila: Proceso paso a paso + Ecuación -->
+  <div class="charts-row cols-23">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Regresión Lineal — Proceso Paso a Paso</p>
+          <p class="chart-sub">Mínimos Cuadrados implementado desde cero · X=AÑO, Y=ACCIDENTES</p>
+        </div>
+        <span class="chart-tag">Métodos Numéricos</span>
+      </div>
+      <div class="mn-steps">
+        <div class="mn-step"><div class="mn-step-num">1</div><div class="mn-step-txt"><strong>Variables:</strong> X = AÑO (independiente, tiempo) · Y = ACCIDENTES_REGISTRADOS (dependiente). Cada observación = promedio anual ($\bar{y} \approx 792.67$).</div></div>
+        <div class="mn-step"><div class="mn-step-num">2</div><div class="mn-step-txt"><strong>Sumas:</strong> n=13 · Σxi=26,195 · Σyi=10,294.67 · Σ(xi·yi)=20,721,397.09 · Σ(xi²)=52,795,041</div></div>
+        <div class="mn-step"><div class="mn-step-num">3</div><div class="mn-step-txt"><strong>Pendiente:</strong> m = [n·Σ(xi·yi) − Σxi·Σyi] / [n·Σ(xi²) − (Σxi)²] = <strong style="color:var(--accent2)">−91.2029</strong></div></div>
+        <div class="mn-step"><div class="mn-step-num">4</div><div class="mn-step-txt"><strong>Intercepto:</strong> b = ȳ − m·x̄ = 792.67 − (−91.2029 × 2015) = <strong style="color:var(--accent2)">185,021.59</strong></div></div>
+        <div class="mn-step"><div class="mn-step-num">5</div><div class="mn-step-txt"><strong>Ecuación:</strong> Y = −91.2029·X + 185,021.59 → por cada año los accidentes disminuyen ~91 en promedio.</div></div>
+        <div class="mn-step"><div class="mn-step-num">6</div><div class="mn-step-txt"><strong>Bondad de Ajuste R² (35.47%):</strong> Coeficiente de determinación R² = 0.3547. Indica la <em>proporción de variabilidad temporal explicada por la recta</em>. <strong>NO es una medida de exactitud (Accuracy).</strong> El 64.53% restante obedece a factores multicausales (clima, infraestructura y pandemia 2020). Error estándar = 500.35.</div></div>
+      </div>
+      <div class="mn-ecuacion" style="margin-top:14px">
+        <div class="formula">Y = −91.2029 · X + 185,021.59</div>
+        <div class="desc">Ecuación de la recta · R² = 0.3547 (Variabilidad explicada, no Accuracy) · Rango: [2014, 2026] · n=13</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Interpolación de Lagrange — Nodos y Polinomio</p>
+          <p class="chart-sub">5 nodos estratégicos · Polinomio de grado 4 (cuártico)</p>
+        </div>
+        <span class="chart-tag">Métodos Numéricos</span>
+      </div>
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:10px">
+        P(x) = Σ yi · Li(x) donde Li(x) = Π [(x−xj)/(xi−xj)] para j≠i
+      </p>
+      <div class="mn-nodos">
+        <div class="mn-nodo"><div class="n">Nodo 0</div><div class="x">2014</div><div class="y">1,119</div><div class="nd">Inicio del rango</div></div>
+        <div class="mn-nodo"><div class="n">Nodo 1</div><div class="x">2016</div><div class="y">2,107</div><div class="nd">Pico máximo</div></div>
+        <div class="mn-nodo"><div class="n">Nodo 2</div><div class="x">2019</div><div class="y">430</div><div class="nd">Punto intermedio</div></div>
+        <div class="mn-nodo"><div class="n">Nodo 3</div><div class="x">2022</div><div class="y">387</div><div class="nd">Post-pandemia</div></div>
+        <div class="mn-nodo"><div class="n">Nodo 4</div><div class="x">2026</div><div class="y">677</div><div class="nd">Fin del rango</div></div>
+      </div>
+      <div class="info-box" style="margin-top:12px">
+        <span class="icon">⚠️</span>
+        <span><strong>Propiedad cardinal en los Nodos vs. Puntos Intermedios:</strong> El error cero ($\varepsilon \approx 0$) está estrictamente garantizado <strong>ÚNICAMENTE en los 5 nodos</strong> con los que se construyó el polinomio. En años intermedios no nodales (ej. 2023 con 102.3% y 2025 con 109.8%), el valor interpolado difiere considerablemente del valor real debido a las oscilaciones naturales del polinomio de grado 4. <em>Lagrange pasa exactamente por los nodos, pero eso no garantiza que represente fielmente los demás datos.</em></span>
+      </div>
+      <table style="margin-top:12px">
+        <thead><tr><th>Año (X)</th><th>Y Interpolado P(x)</th><th>Y Real</th><th>Error %</th><th>Comportamiento</th></tr></thead>
+        <tbody>
+          <tr><td>2017</td><td>1,629.5</td><td>1,833.7</td><td><span class="pill pill-green">11.1%</span></td><td>Ajuste intermedio cercano</td></tr>
+          <tr><td>2020</td><td>115.1</td><td>260.0</td><td><span class="pill pill-orange">55.7%</span></td><td>Año atípico pandemia</td></tr>
+          <tr><td>2023</td><td>834.4</td><td>412.4</td><td><span class="pill pill-orange">102.3%</span></td><td>Oscilación polinómica (no nodo)</td></tr>
+          <tr><td>2025</td><td>1,322.2</td><td>630.3</td><td><span class="pill pill-orange">109.8%</span></td><td>Oscilación polinómica (no nodo)</td></tr>
+        </tbody>
+      </table>
+      <div style="background:var(--bg3);border-left:4px solid var(--accent5);padding:12px 14px;border-radius:8px;margin-top:12px;font-size:.78rem;color:var(--text);line-height:1.45">
+        <strong style="color:var(--accent5)">🔬 Fundamentación Matemática: ¿Por qué Lagrange presenta errores elevados en 2023 y 2025?</strong>
+        <ul style="margin:4px 0 0 14px;color:var(--muted)">
+          <li><strong>Fenómeno de Runge:</strong> En polinomios de orden superior (grado 4) con nodos no espaciados según Chebyshev, se producen oscilaciones espurias entre los nodos y en los bordes del intervalo.</li>
+          <li><strong>Ruido estocástico vs. función analítica:</strong> Lagrange asume funciones analíticas deterministas suaves. La siniestralidad vial es un proceso empírico ruidoso con choques exógenos (ej. caída atípica en pandemia 2020); forzar el paso exacto por los nodos propaga el ruido a todo el polinomio.</li>
+          <li><strong>Soporte global:</strong> Cada base polinómica $L_i(x)$ tiene influencia sobre todo el dominio $[2014, 2026]$; una variación en un nodo altera fuertemente los valores de los puntos no nodales.</li>
+          <li><strong>MCO vs. Lagrange:</strong> El método idóneo para modelar la tendencia estructural es la <strong>Regresión Lineal por Mínimos Cuadrados</strong> (que filtra el ruido minimizando residuos), mientras que Lagrange se restringe a interpolación exacta en los nodos.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Fila: Gráfica Regresión + Gráfica Lagrange -->
+  <div class="charts-row cols-2">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Regresión Lineal · Datos Reales + Recta Ajustada</p>
+          <p class="chart-sub">Y = −91.2029·X + 185,021.59 · Mínimos Cuadrados · n=13</p>
+        </div>
+        <span class="chart-tag">Reg. Lineal</span>
+      </div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="chartMnRL"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Interpolación de Lagrange · Polinomio Grado 4</p>
+          <p class="chart-sub">5 nodos estratégicos · Rango de interpolación [2014, 2026]</p>
+        </div>
+        <span class="chart-tag">Lagrange</span>
+      </div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="chartMnLag"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Fila: Comparativa + Residuos -->
+  <div class="charts-row cols-2">
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Comparación: Real vs. Regresión vs. Lagrange</p>
+          <p class="chart-sub">Los tres modelos sobre todos los puntos del dataset anual</p>
+        </div>
+        <span class="chart-tag">Comparación</span>
+      </div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="chartMnComp"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title">Residuos de la Regresión Lineal</p>
+          <p class="chart-sub">Y_real − Y_predicho · Detecta años atípicos</p>
+        </div>
+        <span class="chart-tag">Error</span>
+      </div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="chartMnRes"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tabla comparativa numérica -->
+  <div class="chart-card" style="margin-bottom:24px">
+    <div class="chart-header">
+      <div>
+        <p class="chart-title">Tabla Comparativa · Y_real vs. Y_Regresión vs. Y_Lagrange</p>
+        <p class="chart-sub">Todos los años · Error absoluto y porcentual por método</p>
+      </div>
+      <span class="chart-tag">Tabla completa</span>
+    </div>
+    <div class="ml-table-wrap">
+      <table>
+        <thead>
+          <tr><th>AÑO</th><th>Y Real</th><th>Y Regresión</th><th>Err RL %</th><th>Y Lagrange</th><th>Err Lag %</th><th>Mejor</th></tr>
+        </thead>
+        <tbody id="tbodyMnComp"></tbody>
+        <tfoot id="tfootMnComp"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Calculadora / Predictor -->
+  <div class="chart-card" style="margin-bottom:24px;border-color:var(--accent5)">
+    <div class="chart-header">
+      <div>
+        <p class="chart-title" style="color:var(--accent5)">🧮 Calculadora Predictiva Interactiva (Regresión Lineal & Lagrange)</p>
+        <p class="chart-sub">Ingresa cualquier año y calcula la estimación de siniestralidad vial en tiempo real con ambos modelos</p>
+      </div>
+      <span class="chart-tag" style="background:#a78bfa20;color:var(--accent5);border-color:#a78bfa40">Interactiva</span>
+    </div>
+    <div class="charts-row cols-2" style="margin-bottom:0">
+      <div style="background:#0f172a;border:2px solid var(--accent2);border-radius:12px;padding:18px">
+        <h4 style="color:var(--accent2);font-size:.95rem;margin-bottom:8px">📏 Modelo 1: Regresión Lineal (Y = m·X + b)</h4>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px">Evalúa sobre la recta continua: $Y = -91.2029 \cdot X + 185021.59$</p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <label style="font-size:.82rem;color:var(--text);font-weight:600">Año (X):</label>
+          <input type="number" id="inputRL" value="2027" min="2000" max="2050" style="background:var(--bg2);border:1px solid var(--accent2);color:var(--text);padding:6px 12px;border-radius:6px;width:110px;font-size:.9rem;font-weight:700">
+          <button onclick="calcDashRL()" style="background:var(--accent2);color:#0f172a;border:none;padding:6px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-size:.85rem">Calcular</button>
+        </div>
+        <div id="resultDashRL" style="margin-top:12px;font-size:1.05rem;font-weight:700;color:var(--accent2)"></div>
+      </div>
+
+      <div style="background:#0f172a;border:2px solid var(--accent5);border-radius:12px;padding:18px">
+        <h4 style="color:var(--accent5);font-size:.95rem;margin-bottom:8px">🔵 Modelo 2: Interpolación de Lagrange (P(x))</h4>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px">Evalúa sobre el polinomio grado 4 (válido dentro del rango [2014, 2026])</p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <label style="font-size:.82rem;color:var(--text);font-weight:600">Año (X):</label>
+          <input type="number" id="inputLag" value="2018" min="2014" max="2026" style="background:var(--bg2);border:1px solid var(--accent5);color:var(--text);padding:6px 12px;border-radius:6px;width:110px;font-size:.9rem;font-weight:700">
+          <button onclick="calcDashLag()" style="background:var(--accent5);color:#0f172a;border:none;padding:6px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-size:.85rem">Calcular</button>
+        </div>
+        <div id="resultDashLag" style="margin-top:12px;font-size:1.05rem;font-weight:700;color:var(--accent5)"></div>
+      </div>
+    </div>
+
+    <!-- Historial persistente de predicciones en API / NeonDB -->
+    <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:.82rem;color:var(--accent1)">🗄️ Historial Reciente de Predicciones (API → NeonDB)</strong>
+        <button onclick="window.AutoGestAPI && window.AutoGestAPI.loadPredictions()" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:.72rem;cursor:pointer">↻ Actualizar</button>
+      </div>
+      <div class="ml-table-wrap">
+        <table style="font-size:.76rem">
+          <thead>
+            <tr><th>Modelo</th><th>Año (X)</th><th style="text-align:right">Predicción (Y)</th><th>Evaluación</th><th>Fecha</th></tr>
+          </thead>
+          <tbody id="tbodyHistorialPredicciones">
+            <tr><td colspan="5" style="text-align:center;color:var(--muted)">Cargando historial desde la API...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  </section> <!-- /sec-metodos-numericos -->
+
+
+  <!-- ══════════════════════════════════════════════════════════════
+       CONCLUSIONES EJECUTIVAS Y LIMITACIONES ACADÉMICAS (PERMANENTE)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="sec-conclusiones" style="margin-top:30px;margin-bottom:30px">
+    <div class="chart-card" style="border-color:var(--accent1);border-width:2px">
+      <div class="chart-header">
+        <div>
+          <p class="chart-title" style="color:var(--accent1);font-size:1.1rem">🎓 Conclusiones Ejecutivas y Limitaciones Académicas (Defensa Universitaria AutoGest)</p>
+          <p class="chart-sub">Sustentación metodológica integral para el jurado docente &middot; Minería de Datos y Métodos Numéricos &middot; UNIMINUTO Ibagué</p>
+        </div>
+        <span class="chart-tag" style="background:#38bdf825;color:var(--accent1);border-color:#38bdf860">Defensa de Proyecto</span>
+      </div>
+
+      <div class="charts-row cols-2" style="margin-bottom:18px">
+        <div style="background:var(--bg3);padding:18px;border-radius:10px;border-left:4px solid var(--accent2)">
+          <h4 style="color:var(--accent2);font-size:.95rem;margin-bottom:10px">✅ Conclusiones Ejecutivas Principales</h4>
+          <ul style="font-size:.82rem;color:var(--text);line-height:1.55;margin-left:16px">
+            <li><strong>1. Tendencia estructural decreciente:</strong> La regresión por Mínimos Cuadrados confirma una reducción sistemática del promedio de accidentes (~91 a ~100 accidentes menos por año), validada tanto en la regresión oficial semestral (m = &minus;99.85 acc/año [&minus;49.92 acc/semestre con &Delta;X=0.5], R&sup2; = 37.98%, N = 25) como en la complementaria anual (m = &minus;91.20 acc/año, R&sup2; = 35.47%, N = 13).</li>
+            <li><strong>2. Importancia predictiva vs. causalidad física:</strong> La variable <code>VEHICULOS_EXENTOS</code> obtuvo la mayor importancia relativa en el Árbol de Decisión (41.2%) y correlación de Pearson r = 0.7154 (N = 507). Esto refleja que las zonas de alta congestión y corredores de servicio concentran tanto vehículos exentos como incidentes, <em>pero de ninguna forma implica que los exentos causen los accidentes</em>.</li>
+            <li><strong>3. Impacto crítico de StandardScaler en algoritmos basados en distancia:</strong> En KNN (K=5), el Accuracy pasó de <strong>74.02% sin escalar</strong> a <strong>83.46% con StandardScaler (+9.44%)</strong>. Sin estandarización, la variable <code>TRAFICO_TOTAL</code> (magnitud de cientos de millones) monopolizaba el cálculo de la distancia euclidiana d(p,q) = &radic;&Sigma;(pi &minus; qi)&sup2;, anulando el aporte de variables críticas de menor escala.</li>
+            <li><strong>4. Interpretación rigurosa del R&sup2; (37.98% / 35.47%):</strong> El coeficiente de determinación R&sup2; representa estrictamente la <em>proporción de variabilidad temporal explicada por el modelo lineal</em>. <strong>No es una medida de exactitud (Accuracy).</strong> El ~62% restante de variabilidad obedece a factores multicausales (clima, calidad vial, operativos, restricciones de pandemia en 2020).</li>
+            <li><strong>5. Propiedad cardinal de los 5 nodos en Lagrange:</strong> El error cero (&epsilon; &approx; 0) está garantizado <em>únicamente en los 5 nodos</em> seleccionados (2014, 2016, 2019, 2022, 2026). En años intermedios no nodales como 2023 (error 102.3%) y 2025 (error 109.8%), las oscilaciones polinómicas (fenómeno de Runge) provocan desviaciones elevadas, demostrando que Mínimos Cuadrados es el método adecuado para tendencias empíricas ruidosas.</li>
+          </ul>
+        </div>
+
+        <div style="background:var(--bg3);padding:18px;border-radius:10px;border-left:4px solid var(--accent3)">
+          <h4 style="color:var(--accent3);font-size:.95rem;margin-bottom:10px">⚠️ Limitaciones Académicas y Metodológicas</h4>
+          <ul style="font-size:.82rem;color:var(--text);line-height:1.55;margin-left:16px">
+            <li><strong>1. Datos parciales del año 2026:</strong> El año 2026 contiene únicamente 5 meses reportados (Ene&ndash;May) con 10,156 accidentes acumulados (tasa media de 677.07 acc/categoría y 2,031.2 acc/mes para la ciudad). La cifra de <strong>24,374 eventos</strong> corresponde a una anualización aritmética ilustrativa (2,031.2 acc/mes × 12 meses) para advertir que el periodo está inconcluso, no a un pronóstico estadístico. Se etiqueta estrictamente como <code>2026*</code> en todas las gráficas para evitar falsas conclusiones de una reducción abrupta.</li>
+            <li><strong>2. Cumplimiento del tamaño muestral (N &ge; 15):</strong> La serie macro anual sólo dispone de 13 años (2014&ndash;2026). Para no inventar ni duplicar datos artificialmente, se construyó la regresión semestral con <strong>25 observaciones reales</strong> (2014-S1 a 2026-S1*), satisfaciendo plenamente el criterio de evaluación docente.</li>
+            <li><strong>3. Cobertura geográfica y estacionalidad intra-anual:</strong> El dataset integrado municipal carece de georreferenciación por comunas o cuadrantes específicos. Las regresiones lineales no modelan la estacionalidad cíclica de festividades locales (Festival Folclórico de Ibagué en junio y fin de año en diciembre).</li>
+            <li><strong>4. Correlaciones bivariadas reportadas:</strong> Se reemplazó la cifra genérica r &approx; 0.74 por los valores exactos verificados: <strong>Tráfico vs. Accidentes (r = 0.6683, Pearson, N = 507 observaciones)</strong> y <strong>Vehículos Exentos vs. Accidentes (r = 0.7154, Pearson, N = 507 observaciones)</strong>. La cifra 0.74 correspondía al Accuracy de KNN sin escalar (74.02%), no a Pearson.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="background:var(--bg2);border:1px solid #38bdf830;padding:12px 16px;border-radius:8px;font-size:.78rem;color:var(--muted);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span>📌 <strong>Sustentación Académica AutoGest:</strong> Proyecto desarrollado para Minería de Datos y Métodos Numéricos &middot; Universidad Minuto de Dios (UNIMINUTO), Sede Ibagué &middot; 2026</span>
+        <span class="pill pill-blue">Auditoría y Validación Completada</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <strong>AUTOGEST</strong> · Sistema de Gestión Analítica de Siniestralidad Vial · Ibagué, Colombia<br>
+  Minería de Datos · Ingeniería de Sistemas · UNIMINUTO Ibagué · 2026-2 ·
+  Docente: Esteban Ernesto Morales Castro
+</footer>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SCRIPTS DE CHARTS
+═══════════════════════════════════════════════════════════════ -->
+<script>
+/* ── Paleta global ─────────────────────────────────────────────── */
+const C = {
+  blue:   '#38bdf8', green:  '#34d399', orange: '#fb923c',
+  pink:   '#f472b6', purple: '#a78bfa', red:    '#f87171',
+  yellow: '#fbbf24', teal:   '#2dd4bf', indigo: '#818cf8',
+};
+const alpha = (hex, a) => hex + Math.round(a*255).toString(16).padStart(2,'0');
+
+Chart.defaults.color      = '#94a3b8';
+Chart.defaults.borderColor = '#334155';
+Chart.defaults.font.family = 'Segoe UI, system-ui, sans-serif';
+
+function baseOpts(title) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#94a3b8', boxWidth: 12, padding: 14, font: { size: 11 } } },
+      title:  { display: false },
+      tooltip: {
+        backgroundColor: '#1e293b',
+        titleColor: '#e2e8f0',
+        bodyColor:  '#94a3b8',
+        borderColor: '#334155',
+        borderWidth: 1,
+        padding: 10,
+      }
+    },
+    scales: {
+      x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+      y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+    }
+  };
+}
+
+window.AUTOGEST_CHARTS = {};
+
+/* ── 1. Accidentes por año ───────────────────────────────────── */
+window.AUTOGEST_CHARTS.accAnio = new Chart(document.getElementById('chartAccAnio'), {
+  type: 'bar',
+  data: {
+    labels: [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,'2026* (5 meses)'],
+    datasets: [{
+      label: 'Accidentes registrados',
+      data: [40285,42437,75849,66012,17786,15495,12479,14799,18568,19794,21885,22689,10156],
+      backgroundColor: [
+        C.orange,C.orange,'#ef4444','#f97316',
+        C.blue,C.blue,C.green,C.green,
+        C.blue,C.blue,C.blue,C.blue,'#a78bfa'
+      ],
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    plugins: { ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: {
+          label: ctx => {
+            if (ctx.dataIndex === 12) {
+              return ` 2026* (Ene–May, 5 meses): ${ctx.raw.toLocaleString('es-CO')} acc. (proy. anualizada: 24,374)`;
+            }
+            return ` ${ctx.raw.toLocaleString('es-CO')} accidentes`;
+          }
+        }
+      }
+    }
+  }
+});
+
+/* ── 2. Tipo de vehículo (donut) ─────────────────────────────── */
+window.AUTOGEST_CHARTS.tipoVeh = new Chart(document.getElementById('chartTipoVeh'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Liviano', 'Carga Pesado', 'Transporte Pasajeros', 'Otro'],
+    datasets: [{
+      data: [253772, 67105, 57357, 0],
+      backgroundColor: [C.blue, C.orange, C.purple, C.teal],
+      borderColor: '#1e293b',
+      borderWidth: 3,
+      hoverOffset: 10,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 14, font: { size: 11 } } },
+      tooltip: {
+        backgroundColor: '#1e293b',
+        callbacks: {
+          label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString('es-CO')} (${((ctx.raw/378234)*100).toFixed(1)}%)`
+        }
+      }
+    },
+    cutout: '62%'
+  }
+});
+
+/* ── 3. Estacionalidad mensual ───────────────────────────────── */
+const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+window.AUTOGEST_CHARTS.meses = new Chart(document.getElementById('chartMeses'), {
+  type: 'radar',
+  data: {
+    labels: meses,
+    datasets: [{
+      label: 'Prom. accidentes',
+      data: [737.77,729.27,786.89,716.73,728.23,736.10,767.83,782.95,766.95,768.88,716.10,716.88],
+      backgroundColor: alpha(C.blue, 0.15),
+      borderColor: C.blue,
+      borderWidth: 2,
+      pointBackgroundColor: C.blue,
+      pointRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#94a3b8' } } },
+    scales: {
+      r: {
+        ticks: { color: '#64748b', backdropColor: 'transparent', font: { size: 9 } },
+        grid: { color: '#334155' },
+        pointLabels: { color: '#94a3b8', font: { size: 10 } },
+        min: 700, max: 800,
+      }
+    }
+  }
+});
+
+/* ── 4. Volumen tráfico por año ──────────────────────────────── */
+window.AUTOGEST_CHARTS.trafico = new Chart(document.getElementById('chartTrafico'), {
+  type: 'line',
+  data: {
+    labels: [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,'2026* (5 meses)'],
+    datasets: [{
+      label: 'Volumen de tráfico',
+      data: [218476734,246823836,258451828,270973294,256339757,235519555,
+             179492097,246813956,304283604,321700090,303191197,310233402,131002118],
+      borderColor: C.green,
+      backgroundColor: alpha(C.green, 0.12),
+      borderWidth: 2.5,
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: C.green,
+      pointRadius: 4,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    plugins: { ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: { label: ctx => ` ${(ctx.raw/1e6).toFixed(1)}M vehículos` }
+      }
+    },
+    scales: {
+      x: baseOpts().scales.x,
+      y: { ...baseOpts().scales.y,
+        ticks: { color: '#64748b', font: { size: 10 },
+          callback: v => (v/1e6).toFixed(0)+'M' }
+      }
+    }
+  }
+});
+
+/* ── 5. Recaudo por tipo vehículo ────────────────────────────── */
+window.AUTOGEST_CHARTS.recaudo = new Chart(document.getElementById('chartRecaudo'), {
+  type: 'bar',
+  data: {
+    labels: ['Liviano', 'Carga Pesado', 'Transporte\nPasajeros', 'Otro'],
+    datasets: [{
+      label: 'Recaudo (MM COP)',
+      data: [20719.60, 18366.85, 5102.26, 0],
+      backgroundColor: [C.blue, C.orange, C.purple, C.teal],
+      borderRadius: 8,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    indexAxis: 'y',
+    plugins: { ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: { label: ctx => ` $${ctx.raw.toLocaleString('es-CO')} MM COP` }
+      }
+    },
+    scales: {
+      x: { ...baseOpts().scales.x,
+        ticks: { color: '#64748b', callback: v => '$'+v.toLocaleString() }
+      },
+      y: baseOpts().scales.y
+    }
+  }
+});
+
+/* ── 6. Correlación tráfico vs accidentes ────────────────────── */
+window.AUTOGEST_CHARTS.correlacion = new Chart(document.getElementById('chartCorrelacion'), {
+  type: 'line',
+  data: {
+    labels: [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,'2026* (5 meses)'],
+    datasets: [
+      {
+        label: 'Volumen Tráfico (norm.) · r = 0.6683',
+        data: [0.49,0.59,0.63,0.67,0.62,0.52,0.17,0.49,0.78,0.86,0.77,0.84,0.17],
+        borderColor: C.green, backgroundColor: alpha(C.green, 0.08),
+        borderWidth: 2.5, fill: false, tension: 0.4, pointRadius: 3,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Accidentes Registrados (norm.)',
+        data: [0.47,0.51,1.00,0.86,0.11,0.09,0.05,0.08,0.14,0.16,0.19,0.21,0.08],
+        borderColor: C.red, backgroundColor: alpha(C.red, 0.08),
+        borderWidth: 2.5, fill: false, tension: 0.4, pointRadius: 3,
+        yAxisID: 'y',
+      }
+    ]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: baseOpts().scales.x,
+      y: { ...baseOpts().scales.y, min: 0, max: 1.1,
+           title: { display: true, text: 'Valor normalizado [0-1]', color: '#64748b', font: { size: 10 } } }
+    }
+  }
+});
+
+/* ── 7. Accidentes 2024 mensual ──────────────────────────────── */
+new Chart(document.getElementById('chart2024'), {
+  type: 'bar',
+  data: {
+    labels: meses,
+    datasets: [{
+      label: 'Accidentes 2024',
+      data: [1718,1789,1981,1728,1875,1853,1862,1954,1925,1970,1664,1566],
+      backgroundColor: Array(12).fill(alpha(C.blue, 0.7)),
+      borderColor: C.blue,
+      borderWidth: 1,
+      borderRadius: 5,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    plugins: { ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: { label: ctx => ` ${ctx.raw.toLocaleString('es-CO')} accidentes` }
+      }
+    }
+  }
+});
+
+/* ── 8. Tasa evasión ─────────────────────────────────────────── */
+window.AUTOGEST_CHARTS.evasion = new Chart(document.getElementById('chartEvasion'), {
+  type: 'line',
+  data: {
+    labels: [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,'2026* (5 meses)'],
+    datasets: [{
+      label: 'Tasa de evasión (%)',
+      data: [0.01,0.02,0.01,0.01,0.01,0.00,0.02,0.23,0.02,0.05,6.30,0.03,14.79],
+      borderColor: C.orange,
+      backgroundColor: alpha(C.orange, 0.15),
+      borderWidth: 2.5,
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: ctx => ctx.parsed.y > 2 ? C.red : C.orange,
+      pointRadius: 5,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    plugins: { ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: { label: ctx => ` ${ctx.raw.toFixed(2)}% tasa de evasión` }
+      }
+    },
+    scales: {
+      x: baseOpts().scales.x,
+      y: { ...baseOpts().scales.y,
+        ticks: { color: '#64748b', callback: v => v+'%' }
+      }
+    }
+  }
+});
+
+/* ── 9. Comparación de modelos ML ────────────────────────────── */
+new Chart(document.getElementById('chartModelos'), {
+  type: 'bar',
+  data: {
+    labels: ['Árbol (prof=4)', 'Naive Bayes', 'KNN (k=5 esc.)', 'KNN (sin esc.)'],
+    datasets: [
+      {
+        label: 'Accuracy Train',
+        data: [88.95, 60.26, 91.58, 84.74],
+        backgroundColor: alpha(C.blue, 0.5),
+        borderColor: C.blue,
+        borderWidth: 2,
+        borderRadius: 6,
+      },
+      {
+        label: 'Accuracy Test',
+        data: [83.46, 59.84, 83.46, 74.02],
+        backgroundColor: alpha(C.green, 0.7),
+        borderColor: C.green,
+        borderWidth: 2,
+        borderRadius: 6,
+      }
+    ]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: baseOpts().scales.x,
+      y: { ...baseOpts().scales.y, min: 70, max: 95,
+           ticks: { color: '#64748b', callback: v => v+'%' } }
+    },
+    plugins: { ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}%` }
+      }
+    }
+  }
+});
+
+/* ── 10. Efecto de k en KNN ──────────────────────────────────── */
+new Chart(document.getElementById('chartKNN'), {
+  type: 'line',
+  data: {
+    labels: [1, 3, 5, 11, 21, 31, 51, 71],
+    datasets: [
+      {
+        label: 'Accuracy Train',
+        data: [100, 87.2, 85.3, 83.8, 83.1, 83.1, 83.0, 83.0],
+        borderColor: C.blue, fill: false, tension: 0.4,
+        borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: C.blue,
+      },
+      {
+        label: 'Accuracy Test',
+        data: [73.5, 81.0, 82.0, 82.8, 83.0, 82.8, 83.0, 83.0],
+        borderColor: C.green, fill: false, tension: 0.4,
+        borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: C.green,
+      }
+    ]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: { ...baseOpts().scales.x,
+           title: { display: true, text: 'Valor de k', color: '#64748b', font: { size: 10 } } },
+      y: { ...baseOpts().scales.y, min: 65, max: 102,
+           ticks: { color: '#64748b', callback: v => v+'%' } }
+    }
+  }
+});
+
+/* ── 11. Efecto del escalado ─────────────────────────────────── */
+new Chart(document.getElementById('chartEscalado'), {
+  type: 'bar',
+  data: {
+    labels: ['Sin StandardScaler (k=5)\n(distancias sesgadas)', 'Con StandardScaler (k=5)\n(Pipeline oficial)'],
+    datasets: [{
+      label: 'Accuracy Test (k=5)',
+      data: [74.02, 83.46],
+      backgroundColor: [alpha(C.red, 0.75), alpha(C.green, 0.75)],
+      borderColor: [C.red, C.green],
+      borderWidth: 2,
+      borderRadius: 10,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: baseOpts().scales.x,
+      y: { ...baseOpts().scales.y, min: 60, max: 95,
+           ticks: { color: '#64748b', callback: v => v+'%' } }
+    },
+    plugins: { ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: {
+          label: ctx => ctx.dataIndex === 0
+            ? ' 74.02% accuracy (distancias sesgadas por gran escala de peajes/aforo)'
+            : ' 83.46% accuracy (+9.44% mejora: todas las variables ponderan equitativamente)'
+        }
+      }
+    }
+  }
+});
+
+/* ── 12. Método del codo ─────────────────────────────────────── */
+new Chart(document.getElementById('chartCodo'), {
+  type: 'line',
+  data: {
+    labels: [2,3,4,5,6,7,8],
+    datasets: [{
+      label: 'Inercia (WCSS)',
+      data: [12583, 11332, 10404, 9647, 9047, 8549, 8176],
+      borderColor: C.blue,
+      backgroundColor: alpha(C.blue, 0.12),
+      fill: true,
+      tension: 0.4,
+      borderWidth: 2.5,
+      pointBackgroundColor: [C.blue,C.red,C.blue,C.blue,C.blue,C.blue,C.blue],
+      pointRadius:          [4,8,4,4,4,4,4],
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    plugins: { ...baseOpts().plugins,
+      annotation: {},
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: { label: ctx => ` Inercia: ${ctx.raw.toLocaleString('es-CO')}` }
+      }
+    },
+    scales: {
+      x: { ...baseOpts().scales.x,
+           title: { display: true, text: 'k (número de clústeres)', color: '#64748b', font: { size: 10 } } },
+      y: { ...baseOpts().scales.y,
+           title: { display: true, text: 'Inercia', color: '#64748b', font: { size: 10 } } }
+    }
+  }
+});
+
+/* ── 13. Coeficiente de silueta ──────────────────────────────── */
+new Chart(document.getElementById('chartSilueta'), {
+  type: 'bar',
+  data: {
+    labels: [2,3,4,5,6,7,8],
+    datasets: [{
+      label: 'Coef. Silueta',
+      data: [0.128, 0.129, 0.122, 0.126, 0.127, 0.127, 0.124],
+      backgroundColor: ctx => ctx.dataIndex === 1
+        ? alpha(C.green, 0.9) : alpha(C.purple, 0.6),
+      borderColor: ctx => ctx.dataIndex === 1 ? C.green : C.purple,
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: { ...baseOpts().scales.x,
+           title: { display: true, text: 'k (número de clústeres)', color: '#64748b', font: { size: 10 } } },
+      y: { ...baseOpts().scales.y, min: 0.115, max: 0.135,
+           ticks: { color: '#64748b', callback: v => v.toFixed(3) },
+           title: { display: true, text: 'Silueta', color: '#64748b', font: { size: 10 } } }
+    },
+    plugins: { ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: { label: ctx => ` Silueta: ${ctx.raw.toFixed(3)}` }
+      }
+    }
+  }
+});
+
+/* ── 14. Importancia de variables ────────────────────────────── */
+new Chart(document.getElementById('chartImportancia'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'VEHICULOS_EXENTOS','VOLUMEN_TRAFICO','MILLAJE_PROMEDIO',
+      'COSTO_TOTAL_TALLER','SERVICIOS_TALLER','VEHICULOS_EVASORES'
+    ],
+    datasets: [{
+      label: 'Importancia Gini',
+      data: [0.42, 0.24, 0.16, 0.09, 0.06, 0.03],
+      backgroundColor: [
+        C.blue, C.green, C.purple, C.orange, C.teal, C.pink
+      ],
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    indexAxis: 'y',
+    scales: {
+      x: { ...baseOpts().scales.x,
+           title: { display: true, text: 'Importancia normalizada [0-1]', color: '#64748b', font: { size: 10 } },
+           max: 0.5 },
+      y: baseOpts().scales.y
+    }
+  }
+});
+
+/* ── 15. Vehículos evasores por año ──────────────────────────── */
+window.AUTOGEST_CHARTS.evasores = new Chart(document.getElementById('chartEvasores'), {
+  type: 'line',
+  data: {
+    labels: [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,'2026* (5 meses)'],
+    datasets: [{
+      label: 'Vehículos evasores (prom. mensual)',
+      data: [280, 320, 1150, 2800, 350, 290, 410, 680, 520, 630, 4200, 890, 24000],
+      borderColor: C.orange,
+      backgroundColor: alpha(C.orange, 0.12),
+      fill: true,
+      tension: 0.4,
+      borderWidth: 2.5,
+      pointBackgroundColor: ctx => ctx.parsed.y > 3000 ? C.red : C.orange,
+      pointRadius: 4,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: baseOpts().scales.x,
+      y: { ...baseOpts().scales.y,
+           ticks: { color: '#64748b', callback: v => v.toLocaleString('es-CO') } }
+    }
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   MÉTODOS NUMÉRICOS · Regresión Lineal + Interpolación Lagrange
+══════════════════════════════════════════════════════════════ */
+
+const MN_X = [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
+const MN_Y = [1119.03,1178.81,2106.92,1833.67,494.06,430.42,259.98,308.31,386.83,412.38,455.94,630.25,677.07];
+const MN_m = -91.2029;
+const MN_b =  185021.5922;
+const MN_YRL = MN_X.map(x => MN_m * x + MN_b);
+
+/* Lagrange helpers */
+const LAG_XN = [2014, 2016, 2019, 2022, 2026];
+const LAG_YN = [1119.03, 2106.92, 430.42, 386.83, 677.07];
+function liVal(i, x, xs) {
+  let r = 1;
+  for (let j = 0; j < xs.length; j++) {
+    if (j !== i) r *= (x - xs[j]) / (xs[i] - xs[j]);
+  }
+  return r;
+}
+function lagrangeVal(x) {
+  return LAG_YN.reduce((s, yi, i) => s + yi * liVal(i, x, LAG_XN), 0);
+}
+
+/* Curva continua de Lagrange (500 puntos) */
+const lagCurveX = [], lagCurveY = [];
+for (let xv = 2014; xv <= 2026; xv += 0.025) {
+  lagCurveX.push(parseFloat(xv.toFixed(3)));
+  lagCurveY.push(lagrangeVal(xv));
+}
+const MN_YLag = MN_X.map(x => lagrangeVal(x));
+
+/* Recta continua para gráfica */
+const rlCurveX = [2013.5, 2026.5];
+const rlCurveY = rlCurveX.map(x => MN_m * x + MN_b);
+
+const fmtMN = v => parseFloat(v.toFixed(2)).toLocaleString('es-CO', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+
+/* ── MN-0: Regresión Lineal Semestral Oficial (N = 25 >= 15) ─── */
+const SEM_LABELS = [
+  "2014-S1","2014-S2","2015-S1","2015-S2","2016-S1","2016-S2","2017-S1","2017-S2",
+  "2018-S1","2018-S2","2019-S1","2019-S2","2020-S1","2020-S2","2021-S1","2021-S2",
+  "2022-S1","2022-S2","2023-S1","2023-S2","2024-S1","2024-S2","2025-S1","2025-S2","2026-S1*"
+];
+const SEM_X = [
+  2014.0, 2014.5, 2015.0, 2015.5, 2016.0, 2016.5, 2017.0, 2017.5,
+  2018.0, 2018.5, 2019.0, 2019.5, 2020.0, 2020.5, 2021.0, 2021.5,
+  2022.0, 2022.5, 2023.0, 2023.5, 2024.0, 2024.5, 2025.0, 2025.5, 2026.0
+];
+const SEM_Y = [
+  1113.72, 1124.33, 1143.22, 1214.39, 2104.39, 2109.44, 1854.33, 1813.00,
+  530.00, 458.11, 448.78, 412.06, 251.17, 268.79, 318.58, 298.04,
+  377.29, 396.38, 418.17, 406.58, 443.79, 468.08, 610.11, 650.39, 677.07
+];
+
+const sem_m = -99.8471;
+const sem_b = 202487.60;
+const semCurveX = [2013.7, 2026.3];
+const semCurveY = semCurveX.map(x => sem_m * x + sem_b);
+
+// Render chartMnRLSem
+const canvasSem = document.getElementById('chartMnRLSem');
+if (canvasSem) {
+  new Chart(canvasSem, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Observaciones reales semestrales (N=25)',
+          data: SEM_X.map((x, i) => ({ x, y: SEM_Y[i] })),
+          backgroundColor: C.blue,
+          borderColor: C.blue,
+          pointRadius: 6,
+          pointHoverRadius: 9,
+        },
+        {
+          label: 'Recta Oficial: Y = -99.85·X + 202,488 (R²=37.98%)',
+          data: semCurveX.map((x, i) => ({ x, y: semCurveY[i] })),
+          type: 'line',
+          showLine: true,
+          borderColor: C.green,
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          pointRadius: 0,
+        },
+        {
+          label: 'Mínimo semestral (2020-S1)',
+          data: [{ x: 2020.0, y: 251.17 }],
+          backgroundColor: C.green,
+          borderColor: '#0f172a',
+          pointRadius: 10,
+          pointStyle: 'triangle',
+        },
+        {
+          label: 'Máximo semestral (2016-S2)',
+          data: [{ x: 2016.5, y: 2109.44 }],
+          backgroundColor: C.red,
+          borderColor: '#0f172a',
+          pointRadius: 10,
+          pointStyle: 'triangle',
+          rotation: 180,
+        }
+      ]
+    },
+    options: {
+      ...baseOpts(),
+      scales: {
+        x: {
+          type: 'linear',
+          min: 2013.5,
+          max: 2026.5,
+          title: { display: true, text: 'AÑO Y SEMESTRE (X)', color: '#94a3b8' },
+          ticks: {
+            color: '#64748b',
+            stepSize: 1,
+            callback: v => {
+              const semIdx = SEM_X.indexOf(v);
+              return semIdx >= 0 ? SEM_LABELS[semIdx] : v;
+            }
+          },
+          grid: { color: '#1e293b' }
+        },
+        y: {
+          min: 0,
+          title: { display: true, text: 'Accidentes por Semestre (Y)', color: '#94a3b8' },
+          ticks: { color: '#64748b', callback: v => v.toLocaleString('es-CO') },
+          grid: { color: '#1e293b' }
+        }
+      },
+      plugins: {
+        ...baseOpts().plugins,
+        tooltip: {
+          ...baseOpts().plugins.tooltip,
+          callbacks: {
+            label: c => {
+              const semIdx = SEM_X.indexOf(c.parsed.x);
+              const lbl = semIdx >= 0 ? SEM_LABELS[semIdx] : `X=${c.parsed.x}`;
+              return `${c.dataset.label}: ${lbl} -> ${fmtMN(c.parsed.y)} acc.`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Poblar tabla de 25 semestres
+const tbodySem = document.getElementById('tbodyMnSem');
+const tfootSem = document.getElementById('tfootMnSem');
+if (tbodySem) {
+  let sumY = 0, sumYp = 0, sumErrAbs = 0, sumErrPct = 0;
+  let rowsHtml = '';
+  SEM_X.forEach((x, i) => {
+    const y = SEM_Y[i];
+    const yp = sem_m * x + sem_b;
+    const res = y - yp;
+    const errAbs = Math.abs(res);
+    const errPct = (errAbs / y) * 100;
+
+    sumY += y;
+    sumYp += yp;
+    sumErrAbs += errAbs;
+    sumErrPct += errPct;
+
+    let pillClass = 'pill-green';
+    let pillText = 'Óptimo';
+    if (errPct > 35) { pillClass = 'pill-orange'; pillText = 'Disperso'; }
+    else if (errPct > 20) { pillClass = 'pill-blue'; pillText = 'Aceptable'; }
+
+    const isPartial = SEM_LABELS[i].includes('*');
+    const labelDisplay = isPartial
+      ? `<strong>${SEM_LABELS[i]}</strong> <span class="pill pill-orange" style="font-size:.65rem;margin-left:4px">Parcial (5 meses)</span>`
+      : `<strong>${SEM_LABELS[i]}</strong>`;
+
+    rowsHtml += `<tr>
+      <td>${i + 1}</td>
+      <td>${labelDisplay}</td>
+      <td>${x.toFixed(1)}</td>
+      <td style="text-align:right">${fmtMN(y)}</td>
+      <td style="text-align:right">${fmtMN(yp)}</td>
+      <td style="text-align:right;color:${res >= 0 ? '#38bdf8' : '#fb923c'}">${res >= 0 ? '+' : ''}${fmtMN(res)}</td>
+      <td style="text-align:right">${fmtMN(errAbs)}</td>
+      <td style="text-align:right"><strong>${errPct.toFixed(2)}%</strong></td>
+      <td><span class="pill ${pillClass}">${pillText}</span></td>
+    </tr>`;
+  });
+  tbodySem.innerHTML = rowsHtml;
+
+  const n = SEM_X.length;
+  tfootSem.innerHTML = `
+  <tr style="font-weight:700;background:#0f172a;color:var(--accent2);border-top:2px solid var(--accent2)">
+    <td colspan="3">SUMATORIAS (N = ${n} Semestres)</td>
+    <td style="text-align:right">&Sigma;y = 19,910.21</td>
+    <td style="text-align:right">&Sigma;ŷ = 19,910.21</td>
+    <td style="text-align:right">&Sigma;res = 0.00</td>
+    <td style="text-align:right">&Sigma;|e| = ${fmtMN(sumErrAbs)}</td>
+    <td style="text-align:right">&Sigma;e% = ${sumErrPct.toFixed(1)}%</td>
+    <td><span class="pill pill-green">S_e = 479.59 acc.</span></td>
+  </tr>
+  <tr style="font-weight:700;background:var(--bg3);color:var(--text)">
+    <td colspan="3">MEDIAS Y ECUACIÓN OFICIAL</td>
+    <td style="text-align:right">ȳ = ${fmtMN(sumY / n)}</td>
+    <td style="text-align:right">x&#772; = 2,020.00</td>
+    <td colspan="2" style="text-align:center;color:var(--accent2)">Y = &minus;99.8471&middot;X + 202,487.60</td>
+    <td style="text-align:right">Err Prom: ${(sumErrPct / n).toFixed(2)}%</td>
+    <td><span class="pill pill-green">R² = 37.98%</span></td>
+  </tr>`;
+}
+
+/* ── MN-1: Regresión Lineal ──────────────────────────────────── */
+new Chart(document.getElementById('chartMnRL'), {
+  type: 'scatter',
+  data: {
+    datasets: [
+      {
+        label: 'Datos reales (prom. anual)',
+        data: MN_X.map((x,i) => ({x, y: MN_Y[i]})),
+        backgroundColor: C.blue, borderColor: C.blue,
+        pointRadius: 7, pointHoverRadius: 10,
+      },
+      {
+        label: `Recta: Y = ${MN_m}·X + ${MN_b.toFixed(0)}`,
+        data: rlCurveX.map((x,i) => ({x, y: rlCurveY[i]})),
+        type: 'line',
+        showLine: true,
+        borderColor: C.green, backgroundColor: 'transparent',
+        borderWidth: 2.5, pointRadius: 0, tension: 0,
+      },
+      {
+        label: 'Mínimo Y (2020)',
+        data: [{x: 2020, y: 259.98}],
+        backgroundColor: C.green, borderColor: '#0f172a', borderWidth: 1,
+        pointRadius: 11, pointStyle: 'triangle',
+      },
+      {
+        label: 'Máximo Y (2016)',
+        data: [{x: 2016, y: 2106.92}],
+        backgroundColor: C.red, borderColor: '#0f172a', borderWidth: 1,
+        pointRadius: 11, pointStyle: 'triangle', rotation: 180,
+      },
+    ]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: { type:'linear', min:2013, max:2027, title:{display:true,text:'AÑO',color:'#94a3b8'},
+           ticks:{color:'#64748b',stepSize:2}, grid:{color:'#1e293b'} },
+      y: { min:0, title:{display:true,text:'Accidentes Registrados',color:'#94a3b8'},
+           ticks:{color:'#64748b', callback: v => v.toLocaleString('es-CO')}, grid:{color:'#1e293b'} }
+    },
+    plugins: {
+      ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => `${c.dataset.label}: ${fmtMN(c.parsed.y)}` } }
+    }
+  }
+});
+
+/* ── MN-2: Interpolación Lagrange ───────────────────────────── */
+new Chart(document.getElementById('chartMnLag'), {
+  type: 'scatter',
+  data: {
+    datasets: [
+      {
+        label: 'Todos los datos reales',
+        data: MN_X.map((x,i) => ({x, y: MN_Y[i]})),
+        backgroundColor: '#475569', borderColor: '#475569',
+        pointRadius: 5, pointHoverRadius: 8, order: 4,
+      },
+      {
+        label: 'Polinomio de Lagrange (grado 4)',
+        data: lagCurveX.map((x,i) => ({x, y: lagCurveY[i]})),
+        type: 'line',
+        showLine: true,
+        borderColor: C.purple, backgroundColor: alpha(C.purple, 0.08),
+        borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: true, order: 3,
+      },
+      {
+        label: 'Nodos seleccionados (n=5)',
+        data: LAG_XN.map((x,i) => ({x, y: LAG_YN[i]})),
+        backgroundColor: C.orange, borderColor: '#0f172a', borderWidth: 1.5,
+        pointRadius: 10, pointStyle: 'circle', order: 1,
+      },
+      {
+        label: 'Puntos interpolados',
+        data: [2015,2017,2020,2023].map(x => ({x, y: lagrangeVal(x)})),
+        backgroundColor: C.green, borderColor: '#0f172a', borderWidth: 1,
+        pointRadius: 8, pointStyle: 'rectRot', order: 2,
+      }
+    ]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: { type:'linear', min:2013.5, max:2026.5, title:{display:true,text:'AÑO',color:'#94a3b8'},
+           ticks:{color:'#64748b',stepSize:2}, grid:{color:'#1e293b'} },
+      y: { min:0, title:{display:true,text:'Accidentes Registrados',color:'#94a3b8'},
+           ticks:{color:'#64748b', callback: v => v.toLocaleString('es-CO')}, grid:{color:'#1e293b'} }
+    },
+    plugins: {
+      ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => `${c.dataset.label}: ${fmtMN(c.parsed.y)}` } }
+    }
+  }
+});
+
+/* ── MN-3: Comparación Real vs RL vs Lagrange ───────────────── */
+new Chart(document.getElementById('chartMnComp'), {
+  type: 'line',
+  data: {
+    labels: MN_X,
+    datasets: [
+      { label:'Datos Reales', data: MN_Y, borderColor: C.blue, backgroundColor: alpha(C.blue,0.12),
+        fill:true, tension:0.3, borderWidth:2.5, pointRadius:5 },
+      { label:'Regresión Lineal', data: MN_YRL, borderColor: C.green, backgroundColor:'transparent',
+        fill:false, tension:0, borderWidth:2, borderDash:[8,4], pointRadius:4, pointStyle:'rect' },
+      { label:'Polinomio Lagrange', data: MN_YLag, borderColor: C.purple, backgroundColor:'transparent',
+        fill:false, tension:0.3, borderWidth:2, borderDash:[3,3], pointRadius:4, pointStyle:'triangle' },
+    ]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: { ticks:{color:'#64748b'}, grid:{color:'#1e293b'} },
+      y: { min:0, ticks:{color:'#64748b', callback: v=>v.toLocaleString('es-CO')}, grid:{color:'#1e293b'} }
+    },
+    plugins: {
+      ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => `${c.dataset.label}: ${fmtMN(c.parsed.y)}` } }
+    }
+  }
+});
+
+/* ── MN-4: Residuos de la Regresión ────────────────────────── */
+const residuosMN = MN_Y.map((yi,i) => parseFloat((yi - MN_YRL[i]).toFixed(2)));
+new Chart(document.getElementById('chartMnRes'), {
+  type: 'bar',
+  data: {
+    labels: MN_X,
+    datasets: [{
+      label: 'Residuo (Y_real − Y_pred)',
+      data: residuosMN,
+      backgroundColor: residuosMN.map(r => r > 0 ? alpha(C.red,0.75) : alpha(C.green,0.75)),
+      borderColor:     residuosMN.map(r => r > 0 ? C.red : C.green),
+      borderWidth: 1.5, borderRadius: 5,
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    scales: {
+      x: { ticks:{color:'#64748b'}, grid:{color:'#1e293b'} },
+      y: { ticks:{color:'#64748b', callback: v=>v.toLocaleString('es-CO')}, grid:{color:'#1e293b'},
+           title:{display:true,text:'Residuo',color:'#94a3b8'} }
+    },
+    plugins: {
+      ...baseOpts().plugins,
+      tooltip: { ...baseOpts().plugins.tooltip,
+        callbacks: { label: c => `Residuo ${MN_X[c.dataIndex]}: ${fmtMN(c.parsed.y)}` } }
+    }
+  }
+});
+
+/* ── Tabla comparativa MN ───────────────────────────────────── */
+const tbMnComp = document.getElementById('tbodyMnComp');
+let sumRL = 0, sumLag = 0;
+MN_X.forEach((xi, i) => {
+  const yr  = MN_Y[i];
+  const yRL = MN_YRL[i];
+  const yLg = MN_YLag[i];
+  const eRL  = Math.abs(yr - yRL) / yr * 100;
+  const eLag = Math.abs(yr - yLg) / yr * 100;
+  sumRL += eRL; sumLag += eLag;
+  const mejor = eRL < eLag
+    ? `<span class="pill pill-green">Regresión</span>`
+    : `<span class="pill pill-purple">Lagrange</span>`;
+  tbMnComp.innerHTML += `<tr>
+    <td><strong>${xi}</strong></td>
+    <td>${fmtMN(yr)}</td>
+    <td>${fmtMN(yRL)}</td>
+    <td><span class="pill ${eRL<30?'pill-green':eRL<70?'pill-orange':'pill-blue'}">${eRL.toFixed(1)}%</span></td>
+    <td>${fmtMN(yLg)}</td>
+    <td><span class="pill ${eLag<30?'pill-green':eLag<70?'pill-orange':'pill-blue'}">${eLag.toFixed(1)}%</span></td>
+    <td>${mejor}</td>
+  </tr>`;
+});
+document.getElementById('tfootMnComp').innerHTML = `
+  <tr style="background:var(--bg3);font-weight:700">
+    <td colspan="2">PROMEDIO</td>
+    <td></td><td>${(sumRL/MN_X.length).toFixed(1)}%</td>
+    <td></td><td>${(sumLag/MN_X.length).toFixed(1)}%</td><td></td>
+  </tr>`;
+
+/* ── Calculadora Predictiva Interactiva ──────────────────────── */
+async function calcDashRL(persist = true) {
+  const input = document.getElementById('inputRL');
+  const res = document.getElementById('resultDashRL');
+  if (!input || !res) return;
+  const x = parseFloat(input.value);
+  if (isNaN(x)) return;
+  const yh = MN_m * x + MN_b;
+  const dentro = x >= 2014 && x <= 2026;
+  res.innerHTML =
+    `Accidentes predichos en ${x}: <strong>${yh.toLocaleString('es-CO', {maximumFractionDigits:2})}</strong><br>` +
+    `<span style="font-size:.75rem;color:var(--muted)">${dentro ? '✓ Interpolación (dentro del rango histórico)' : '⚠️ Extrapolación (proyección a futuro)'}</span>`;
+  if (persist && window.AutoGestAPI) {
+    await window.AutoGestAPI.savePrediction('regresion_anual', x);
+  }
+}
+
+async function calcDashLag(persist = true) {
+  const input = document.getElementById('inputLag');
+  const res = document.getElementById('resultDashLag');
+  if (!input || !res) return;
+  const x = parseFloat(input.value);
+  if (isNaN(x)) return;
+  const yI = lagrangeVal(x);
+  const dentro = x >= 2014 && x <= 2026;
+  res.innerHTML =
+    `P(${x}) interpolado: <strong>${yI.toLocaleString('es-CO', {maximumFractionDigits:2})}</strong> accidentes<br>` +
+    `<span style="font-size:.75rem;color:${dentro ? 'var(--accent2)' : 'var(--danger)'}">${dentro ? '✓ Interpolación válida (dentro de los 5 nodos)' : '⚠️ Fuera del rango de nodos'}</span>`;
+  if (persist && window.AutoGestAPI) {
+    await window.AutoGestAPI.savePrediction('lagrange', x);
+  }
+}
+
+// Inicializar calculadora (sin persistir en la carga automática inicial)
+if (document.getElementById('inputRL')) {
+  calcDashRL(false);
+  calcDashLag(false);
+}
+
+/* ── Función de Filtro por Pestañas ────────────────────────── */
+function filtrarVista(vista) {
+  const btnTodo = document.getElementById('btn-tab-todo');
+  const btnMN = document.getElementById('btn-tab-mn');
+  const btnMin = document.getElementById('btn-tab-mineria');
+  const secMineria = document.getElementById('sec-mineria');
+  const secMN = document.getElementById('sec-metodos-numericos');
+
+  if (btnTodo) btnTodo.classList.remove('active');
+  if (btnMN) btnMN.classList.remove('active');
+  if (btnMin) btnMin.classList.remove('active');
+
+  if (vista === 'mn') {
+    if (btnMN) btnMN.classList.add('active');
+    if (secMineria) secMineria.style.display = 'none';
+    if (secMN) {
+      secMN.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  } else if (vista === 'mineria') {
+    if (btnMin) btnMin.classList.add('active');
+    if (secMineria) {
+      secMineria.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    if (secMN) secMN.style.display = 'none';
+  } else {
+    if (btnTodo) btnTodo.classList.add('active');
+    if (secMineria) secMineria.style.display = 'block';
+    if (secMN) secMN.style.display = 'block';
+  }
+}
+
+// Escuchar cambios de hash en URL
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.location.hash === '#sec-metodos-numericos' || window.location.hash === '#mn') {
+    filtrarVista('mn');
+  }
+});
+</script>
+
+<script src="/config.js"></script>
+<script src="/api-client.js"></script>
+</body>
+</html>

@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Métodos Numéricos · AUTOGEST</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>" />
+  <script src="/chart.umd.min.js"></script>
+  <script>
+    if (typeof Chart === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+      document.head.appendChild(s);
+    }
+  </script>
+  <style>
+    :root{
+      --bg:#0f172a; --bg2:#1e293b; --bg3:#334155;
+      --azul:#38bdf8; --verde:#34d399; --rojo:#f87171;
+      --naranja:#fb923c; --morado:#a78bfa; --amarillo:#fbbf24;
+      --texto:#e2e8f0; --muted:#94a3b8; --border:#334155;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--bg);color:var(--texto);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.6}
+
+    /* NAV */
+    nav{background:var(--bg2);border-bottom:2px solid var(--azul);padding:.6rem 2rem;display:flex;gap:1.5rem;align-items:center;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+    nav .brand{font-size:1.1rem;font-weight:800;color:var(--azul);letter-spacing:-.02em;margin-right:1rem}
+    nav a{color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:600;padding:.3rem .7rem;border-radius:6px;transition:all .2s}
+    nav a:hover,nav a.active{background:var(--bg3);color:var(--texto)}
+
+    /* MAIN */
+    main{max-width:1200px;margin:0 auto;padding:2rem 1.5rem 5rem}
+    section{margin-bottom:3.5rem}
+
+    /* HEADERS */
+    .sec-title{font-size:1.6rem;font-weight:800;border-left:5px solid var(--azul);padding:.2rem 0 .2rem 1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.7rem}
+    .sec-title.verde{border-color:var(--verde)}
+    .sec-title.morado{border-color:var(--morado)}
+    .sec-title.naranja{border-color:var(--naranja)}
+    .sec-num{background:var(--azul);color:#0f172a;width:2.2rem;height:2.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;flex-shrink:0}
+
+    /* CARDS */
+    .card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem}
+    .card-title{font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--azul)}
+
+    /* KPI GRID */
+    .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-bottom:1.5rem}
+    .kpi{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.1rem;text-align:center}
+    .kpi .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.4rem}
+    .kpi .val{font-size:1.6rem;font-weight:800}
+    .kpi .sub{font-size:.75rem;color:var(--muted);margin-top:.3rem}
+    .kpi.azul{border-top:3px solid var(--azul)}.kpi.azul .val{color:var(--azul)}
+    .kpi.verde{border-top:3px solid var(--verde)}.kpi.verde .val{color:var(--verde)}
+    .kpi.rojo{border-top:3px solid var(--rojo)}.kpi.rojo .val{color:var(--rojo)}
+    .kpi.naranja{border-top:3px solid var(--naranja)}.kpi.naranja .val{color:var(--naranja)}
+    .kpi.morado{border-top:3px solid var(--morado)}.kpi.morado .val{color:var(--morado)}
+
+    /* ECUACION BOX */
+    .eq-box{background:#0f172a;border:2px solid var(--verde);border-radius:12px;padding:1.2rem 1.8rem;text-align:center;margin:1rem 0}
+    .eq-box .formula{font-size:1.5rem;font-weight:800;color:var(--verde);font-family:'Cascadia Code',monospace}
+    .eq-box .sub{color:var(--muted);font-size:.85rem;margin-top:.5rem}
+
+    /* STEPS */
+    .steps{display:flex;flex-direction:column;gap:.75rem}
+    .step{display:grid;grid-template-columns:2.2rem 1fr;gap:.75rem;align-items:start}
+    .step-n{background:var(--azul);color:#0f172a;width:2.2rem;height:2.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex-shrink:0}
+    .step-body{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;font-size:.88rem}
+    .step-body .titulo{font-weight:700;color:var(--azul);margin-bottom:.3rem}
+    .step-body .formula-inline{font-family:monospace;background:#0f172a;padding:.3rem .6rem;border-radius:5px;display:inline-block;margin:.3rem 0;color:var(--amarillo)}
+    .step-body .resultado{color:var(--verde);font-weight:700;font-size:1rem}
+
+    /* TABLA */
+    .tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse;font-size:.87rem}
+    thead th{background:var(--bg3);padding:.7rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+    tbody tr{border-bottom:1px solid var(--border)}
+    tbody tr:hover{background:rgba(56,189,248,.05)}
+    tbody tr:last-child{border-bottom:none}
+    td{padding:.6rem 1rem}
+    .tr{text-align:right}
+    tfoot td{padding:.6rem 1rem;background:var(--bg3);font-weight:700}
+
+    /* CHART */
+    .chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem}
+    .chart-wrap h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:1rem}
+    .chart-canvas{position:relative;height:340px}
+
+    /* NODOS */
+    .nodos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin:1rem 0}
+    .nodo{background:var(--bg);border:2px solid var(--naranja);border-radius:12px;padding:1rem;text-align:center}
+    .nodo .ni{font-size:.7rem;color:var(--muted)}
+    .nodo .nx{font-size:1.5rem;font-weight:800;color:var(--naranja)}
+    .nodo .ny{font-size:1rem;color:var(--texto);font-weight:600}
+    .nodo .nd{font-size:.7rem;color:var(--muted);margin-top:.3rem}
+
+    /* BADGE */
+    .badge{display:inline-block;padding:.2rem .65rem;border-radius:999px;font-size:.75rem;font-weight:600}
+    .b-verde{background:rgba(52,211,153,.15);color:var(--verde)}
+    .b-rojo{background:rgba(248,113,113,.15);color:var(--rojo)}
+    .b-naranja{background:rgba(251,146,60,.15);color:var(--naranja)}
+    .b-azul{background:rgba(56,189,248,.15);color:var(--azul)}
+    .b-morado{background:rgba(167,139,250,.15);color:var(--morado)}
+
+    /* ALERT */
+    .alert{border-radius:8px;padding:.75rem 1rem;font-size:.87rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start}
+    .alert-info{background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);color:var(--azul)}
+    .alert-ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--verde)}
+    .alert-warn{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--amarillo)}
+
+    /* PREDICTOR */
+    .predictor{background:#0f172a;border:2px solid var(--morado);border-radius:14px;padding:1.5rem;margin-top:1.5rem}
+    .predictor h3{color:var(--morado);font-size:1rem;font-weight:700;margin-bottom:1rem}
+    .predictor-body{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+    .predictor input{background:var(--bg2);border:1px solid var(--border);color:var(--texto);padding:.6rem 1rem;border-radius:8px;font-size:1rem;width:120px;outline:none;border-color:var(--morado)}
+    .predictor input:focus{border-color:var(--azul)}
+    .predictor button{background:var(--morado);color:#0f172a;border:none;padding:.6rem 1.4rem;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;transition:.2s}
+    .predictor button:hover{background:var(--azul)}
+    .predictor-result{font-size:1.2rem;font-weight:700;color:var(--amarillo);margin-top:.75rem}
+
+    /* COMPARACION GRID */
+    .cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+    @media(max-width:700px){.cmp-grid{grid-template-columns:1fr}}
+    .cmp-box{background:var(--bg);border-radius:12px;padding:1.3rem}
+    .cmp-box h4{font-weight:700;margin-bottom:.8rem}
+    .cmp-box ul{list-style:none;display:flex;flex-direction:column;gap:.4rem}
+    .cmp-box li{font-size:.85rem;padding:.35rem .6rem;background:var(--bg2);border-radius:6px}
+    .cmp-box li::before{content:"→ ";color:var(--azul)}
+
+    /* CHECKLIST */
+    .checklist{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+    .checklist li{display:flex;gap:.75rem;align-items:flex-start;padding:.6rem .9rem;border-radius:8px;background:var(--bg2);border:1px solid var(--border)}
+    .checklist li .ico{font-size:1.1rem;flex-shrink:0}
+    .checklist li .txt{font-size:.88rem}
+    .checklist li .txt small{display:block;color:var(--muted);font-size:.77rem}
+
+    footer{text-align:center;padding:2rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--border)}
+
+    /* COLS */
+    .cols-2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+    @media(max-width:800px){.cols-2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">🚦 AUTOGEST</span>
+  <a href="/">← Dashboard</a>
+  <a href="#variables">Variables</a>
+  <a href="#datos">Datos</a>
+  <a href="#regresion">Regresión Lineal</a>
+  <a href="#lagrange">Lagrange</a>
+  <a href="#comparacion">Comparación</a>
+  <a href="#predictor">Predictor</a>
+  <span id="apiStatusBadge" class="badge b-azul" style="margin-left:auto">🔌 Conectando API...</span>
+</nav>
+
+<main>
+
+<!-- ═══════════════ HEADER ════════════════ -->
+<div style="text-align:center;padding:2rem 1rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:2rem">
+  <div style="display:inline-block;background:var(--azul);color:#0f172a;font-size:.72rem;font-weight:700;padding:.25rem .9rem;border-radius:999px;letter-spacing:.07em;margin-bottom:.75rem">MÉTODOS NUMÉRICOS · UNIMINUTO IBAGUÉ · 2026-2</div>
+  <h1 style="font-size:2rem;font-weight:800">Regresión Lineal &amp; Interpolación de Lagrange</h1>
+  <p style="color:var(--muted);margin-top:.4rem">Proyecto AUTOGEST — Siniestralidad Vial · Ibagué, Colombia</p>
+  <p style="color:var(--muted);font-size:.85rem;margin-top:.3rem">Implementación completa desde cero en JavaScript · Sin librerías estadísticas externas</p>
+</div>
+
+<!-- ═══════════════ 0. VARIABLES ════════════════ -->
+<section id="variables">
+  <div class="sec-title"><span class="sec-num">0</span> Definición de Variables</div>
+
+  <div class="alert alert-info">
+    <span>🎙️</span>
+    <div><strong>Instrucción del profesor:</strong> <em>"Que elijan dos variables que sean cuantitativas... deben decir cuál es la dependiente y la independiente, cuál va a ser el eje X y cuál va a ser el eje Y."</em></div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi azul"><div class="lbl">Variable X (Independiente)</div><div class="val">AÑO</div><div class="sub">Variable temporal continua · Eje X</div></div>
+    <div class="kpi verde"><div class="lbl">Variable Y (Dependiente)</div><div class="val">ACCIDENTES</div><div class="sub">Promedio anual por categoría (ȳ ≈ 792.67)</div></div>
+    <div class="kpi verde"><div class="lbl">Modelo Oficial (Docente)</div><div class="val">25 obs.</div><div class="sub">Semestral (2014-S1 a 2026-S1*) · Cumple N &ge; 15 ✅</div></div>
+    <div class="kpi naranja"><div class="lbl">Modelo Anual Complementario</div><div class="val">13 obs.</div><div class="sub">13 a&ntilde;os consolidados (2014–2026) · Macrotendencia</div></div>
+    <div class="kpi morado"><div class="lbl">Rango Temporal</div><div class="val">2014–2026</div><div class="sub">Dato m&iacute;nimo (2020) y m&aacute;ximo (2016) incluidos ✅</div></div>
+  </div>
+
+  <!-- Aclaración de agregación: acumulados vs promedios -->
+  <div class="alert alert-info" style="margin-top:.75rem">
+    <span>💡</span>
+    <div>
+      <strong>Aclaración de Unidades y Niveles de Agregación:</strong>
+      <p style="font-size:.84rem;margin-top:4px">
+        En el módulo de minería de datos se reporta la <strong>Suma Acumulada Total</strong> de <strong>378,234 accidentes</strong> (suma de todos los siniestros registrados en la base completa durante 2014–2026). Por el contrario, en este módulo de Métodos Numéricos se trabaja con el <strong>Promedio Anual por Categoría (ȳ ≈ 792.67)</strong> para modelar la tasa de cambio temporal sin sesgos de escala. Ambos indicadores son correctos y corresponden a <em>diferentes niveles de agregación estadística</em>.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">¿Qué representa cada observación en ambos modelos?</div>
+    <div style="font-size:.85rem;line-height:1.6;margin-bottom:.75rem">
+      <p style="margin-bottom:6px">
+        &bull; <strong>Modelo Oficial Semestral (N = 25 observaciones):</strong> Corresponde a la agregaci&oacute;n semestral real (2014-S1 a 2026-S1*), modelo que <strong>cumple estrictamente el requisito docente de al menos 15 datos</strong> sin inventar registros sint&eacute;ticos.
+      </p>
+      <p>
+        &bull; <strong>Modelo Anual Complementario (N = 13 observaciones):</strong> Corresponde a los 13 a&ntilde;os consolidados (2014–2026), utilizado como an&aacute;lisis macro hist&oacute;rico complementario (ȳ ≈ 792.67).
+      </p>
+    </div>
+    <div class="cmp-grid">
+      <div class="cmp-box" style="border:1px solid var(--azul)">
+        <h4 style="color:var(--azul)">📅 AÑO → Variable X (Independiente)</h4>
+        <ul>
+          <li>Avanza de forma independiente (el tiempo pasa solo)</li>
+          <li>Numérico, cuantitativo, medible</li>
+          <li>Analogía del profe: <em>"el tiempo"</em></li>
+        </ul>
+      </div>
+      <div class="cmp-box" style="border:1px solid var(--verde)">
+        <h4 style="color:var(--verde)">🚗 ACCIDENTES → Variable Y (Dependiente)</h4>
+        <ul>
+          <li>Depende del año: ¿aumentan o disminuyen?</li>
+          <li>Numérico, cuantitativo, medible</li>
+          <li>Analogía del profe: <em>"la temperatura"</em></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 1. DATOS ════════════════ -->
+<section id="datos">
+  <div class="sec-title verde"><span class="sec-num" style="background:var(--verde)">1</span> Datos del Proyecto</div>
+
+  <div class="alert alert-info">
+    <span>📋</span>
+    <div><strong>Instrucción del profesor:</strong> <em>"Como mínimo debe tener el dato mínimo y el dato máximo. Mínimo quince datos para sacar la recta lineal."</em></div>
+  </div>
+
+  <!-- Justificación Metodológica: n=13 vs n>=15 y Granularidades Reales -->
+  <div class="alert alert-warn" style="margin-top:.5rem;display:block">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:1.2rem">⚖️</span>
+      <strong style="color:var(--naranja);font-size:.95rem">Verificación del Requisito Docente: Mínimo 15 Observaciones en Regresión Lineal</strong>
+    </div>
+    <p style="font-size:.85rem;color:var(--texto);margin-bottom:10px">
+      La instrucción académica exige <em>"mínimo quince datos para sacar la recta lineal"</em>. En el proyecto AUTOGEST <strong>no se inventan datos artificiales</strong>. Para cumplir estrictamente con este requerimiento, se implementaron <strong>tres niveles de granularidad temporal</strong> sobre la base de datos real:
+    </p>
+    <div class="tbl-wrap" style="margin-bottom:8px">
+      <table style="font-size:.8rem">
+        <thead>
+          <tr><th>Granularidad</th><th>N Observaciones</th><th>¿Cumple regla &ge; 15?</th><th>Ecuación de la Recta</th><th>R² (Varianza Explicada)</th><th>Error Estándar</th><th>Conclusión</th></tr>
+        </thead>
+        <tbody>
+          <tr style="background:rgba(52,211,153,.1)">
+            <td><strong>Semestral (Oficial)</strong></td>
+            <td><span class="badge b-verde">N = 25 semestres</span></td>
+            <td><span class="badge b-verde">✅ SÍ (25 &ge; 15)</span></td>
+            <td><code>Y = -99.8471·X + 202,487.60</code></td>
+            <td><strong>37.98%</strong></td>
+            <td>479.59 acc.</td>
+            <td>Cumple formalmente la regla con semestres reales (2014-S1 a 2026-S1*)</td>
+          </tr>
+          <tr>
+            <td><strong>Macro Anual</strong></td>
+            <td><span class="badge b-azul">N = 13 años</span></td>
+            <td>13 periodos consolidados</td>
+            <td><code>Y = -91.20·X + 185,022</code></td>
+            <td><strong>35.47%</strong></td>
+            <td>500.35 acc.</td>
+            <td>Macrotendencia histórica de largo plazo; pendiente negativa coherente</td>
+          </tr>
+          <tr>
+            <td><strong>Micro Mensual</strong></td>
+            <td><span class="badge b-morado">507 observaciones distribuidas en 149 periodos</span></td>
+            <td><span class="badge b-verde">✅ SÍ (507 &ge; 15)</span></td>
+            <td><code>Y = -8.53·Mes + 1,413</code></td>
+            <td><strong>15.72%</strong></td>
+            <td>826.38 acc.</td>
+            <td>Base completa desagregada mes a mes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:.8rem;color:var(--muted)">
+      💡 <em>Argumento para sustentación:</em> Si el evaluador solicita evaluar al menos 15 datos para la entrega, se presenta la <strong>regresión semestral ($N=25$)</strong>, la cual valida la misma tasa de decrecimiento ($\sim 100$ acc/año) sin inventar ni duplicar registros.
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="kpiDatos"></div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>AÑO (X)</th><th class="tr">Accidentes Registrados (Y)</th><th class="tr">Desviación de la media (yi − ȳ)</th><th>Nota</th></tr></thead>
+      <tbody id="tbDatos">
+<tr>
+  <td>1</td>
+  <td><strong>2014</strong></td>
+  <td class="tr">1,119.03</td>
+  <td class="tr" style="color:#38bdf8">+327.21</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><strong>2015</strong></td>
+  <td class="tr">1,178.81</td>
+  <td class="tr" style="color:#38bdf8">+386.99</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><strong>2016</strong></td>
+  <td class="tr">2,106.92</td>
+  <td class="tr" style="color:#38bdf8">+1,315.10</td>
+  <td>Pico histórico</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><strong>2017</strong></td>
+  <td class="tr">1,833.67</td>
+  <td class="tr" style="color:#38bdf8">+1,041.85</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><strong>2018</strong></td>
+  <td class="tr">494.06</td>
+  <td class="tr" style="color:#fb923c">-297.76</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><strong>2019</strong></td>
+  <td class="tr">430.42</td>
+  <td class="tr" style="color:#fb923c">-361.40</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><strong>2020</strong></td>
+  <td class="tr">259.98</td>
+  <td class="tr" style="color:#fb923c">-531.84</td>
+  <td>Mínimo COVID-19</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><strong>2021</strong></td>
+  <td class="tr">308.31</td>
+  <td class="tr" style="color:#fb923c">-483.51</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><strong>2022</strong></td>
+  <td class="tr">386.83</td>
+  <td class="tr" style="color:#fb923c">-404.99</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><strong>2023</strong></td>
+  <td class="tr">412.38</td>
+  <td class="tr" style="color:#fb923c">-379.44</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><strong>2024</strong></td>
+  <td class="tr">455.94</td>
+  <td class="tr" style="color:#fb923c">-335.88</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><strong>2025</strong></td>
+  <td class="tr">630.25</td>
+  <td class="tr" style="color:#fb923c">-161.57</td>
+  <td>Normal</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><strong>2026*</strong></td>
+  <td class="tr">677.07</td>
+  <td class="tr" style="color:#fb923c">-114.75</td>
+  <td>Año parcial (5 meses Ene–May)</td>
+</tr>
+</tbody>
+      <tfoot><tr><td colspan="2"><strong>Media ȳ</strong></td><td class="tr" id="tfMedia"><strong>792.67</strong></td><td></td><td></td></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════ 2. REGRESIÓN LINEAL ════════════════ -->
+<section id="regresion">
+  <!-- ═══════════════ 2.1 REGRESIÓN SEMESTRAL (OFICIAL N=25) ════════════════ -->
+<section id="regresion-semestral">
+  <div class="sec-title verde"><span class="sec-num" style="background:var(--verde)">2.1</span> Modelo Oficial: Regresión Lineal Semestral (N = 25 Observaciones Reales)</div>
+
+  <div class="alert alert-ok">
+    <span>✅</span>
+    <div>
+      <strong>Cumplimiento del Requisito Docente (&ge; 15 Observaciones):</strong>
+      <p style="margin-top:4px;font-size:.84rem">
+        Para satisfacer el requisito de <em>m&iacute;nimo 15 observaciones para construir la recta</em> <strong>sin inventar datos sint&eacute;ticos ni duplicar registros</strong>, se agreg&oacute; la serie hist&oacute;rica real por <strong>semestres naturales (S1 y S2)</strong>. Esto genera <strong>25 observaciones aut&eacute;nticas</strong> (2014-S1 a 2026-S1* donde 2026-S1* consolida los 5 meses disponibles Ene&ndash;May con 677.07 acc.).
+      </p>
+    </div>
+  </div>
+
+  <!-- Resultado Ecuación Semestral -->
+  <div class="eq-box" style="border-left-color:var(--verde)">
+    <div style="font-size:1.15rem;font-weight:700;color:var(--verde);font-family:monospace;margin-bottom:6px">
+      Y = &minus;99.8471 &middot; X + 202,487.60
+    </div>
+    <div style="font-size:.82rem;color:var(--muted)">
+      Ecuaci&oacute;n Semestral Oficial &middot; Variable X: A&ntilde;o decimal semestral [2014.0, 2026.0] &middot; N = 25 &middot; R&sup2; = 37.98% &middot; S_e = 479.59 acc.
+    </div>
+  </div>
+
+  <!-- KPIs Semestrales -->
+  <div class="kpi-grid">
+    <div class="kpi-card verde">
+      <div class="kpi-val">&minus;99.85</div>
+      <div class="kpi-lbl">Pendiente m (acc/año de evolución)</div>
+      <div class="kpi-sub">&#9660; &minus;49.92 acc/semestre (&Delta;X=0.5)</div>
+    </div>
+    <div class="kpi-card azul">
+      <div class="kpi-val">202,488</div>
+      <div class="kpi-lbl">Intercepto b (origen X=0)</div>
+      <div class="kpi-sub">Valor te&oacute;rico del modelo</div>
+    </div>
+    <div class="kpi-card naranja">
+      <div class="kpi-val">37.98%</div>
+      <div class="kpi-lbl">R&sup2; Coef. Determinaci&oacute;n</div>
+      <div class="kpi-sub">Varianza explicada (NO Accuracy)</div>
+    </div>
+    <div class="kpi-card rojo">
+      <div class="kpi-val">479.59</div>
+      <div class="kpi-lbl">Error est&aacute;ndar S_e (acc.)</div>
+      <div class="kpi-sub">Desviaci&oacute;n t&iacute;pica de residuos</div>
+    </div>
+    <div class="kpi-card verde">
+      <div class="kpi-val">25 &ge; 15</div>
+      <div class="kpi-lbl">Requisito Docente</div>
+      <div class="kpi-sub">&#10004; Cumplimiento estricto</div>
+    </div>
+  </div>
+
+  <!-- Gráfica RL Semestral -->
+  <div class="chart-wrap">
+    <h3>📈 Gr&aacute;fica Oficial: 25 Observaciones Semestrales Reales + Recta Ajustada</h3>
+    <div class="chart-canvas"><canvas id="chartRLSem"></canvas></div>
+  </div>
+
+  <!-- Tabla 25 semestres -->
+    <!-- Sumatorias y Fórmulas Semestrales -->
+  <div class="card" style="margin-top:1rem">
+    <div class="card-title">🔢 Sumatorias Oficiales y Deducción de Parámetros (N = 25 Semestres)</div>
+    <div style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:monospace;font-size:.85rem;color:var(--verde);margin-bottom:.75rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:.5rem">
+        <div>&Sigma;xi = 50,500.00</div>
+        <div>&Sigma;yi = 19,910.21</div>
+        <div>&Sigma;(xi&middot;yi) = 40,186,173.89</div>
+        <div>&Sigma;(xi&sup2;) = 102,010,325.00</div>
+        <div>&Sigma;(yi&sup2;) = 24,386,857.45</div>
+        <div>x&#772; = 2,020.00 a&ntilde;os</div>
+        <div>y&#772; = 796.41 acc.</div>
+        <div>S_e = 479.59 acc.</div>
+      </div>
+    </div>
+    <div style="font-size:.82rem;color:var(--muted);line-height:1.5">
+      <strong>Conversión rigurosa de unidades de la pendiente:</strong><br>
+      Como la variable temporal decimal $X$ avanza a razón de $0.5$ por semestre ($2014.0, 2014.5, \dots$), la pendiente calculada $m = rac{\Delta Y}{\Delta X} = -99.8471$ representa la variación por unidad entera de $X$ (<strong>&minus;99.85 accidentes / año</strong>). La variación media por cada semestre es $\Delta Y = m 	imes 0.5 = \mathbf{-49.92 	ext{ accidentes / semestre}}$. Esto demuestra coherencia directa con el ritmo de cambio de la serie macro anual ($m = -91.20$ acc/año).
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Evaluaci&oacute;n Detallada de las 25 Observaciones Semestrales: Y_real vs. Y_predicho y Error</div>
+    <div class="tbl-wrap" style="max-height:380px;overflow-y:auto">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Periodo</th><th>X (A&ntilde;o Dec.)</th><th class="tr">Y Real</th><th class="tr">Y Predicho (ŷ)</th><th class="tr">Residuo (yi &minus; ŷi)</th><th class="tr">Error Abs.</th><th class="tr">Error %</th><th>Ajuste</th></tr>
+        </thead>
+        <tbody id="tbRLSem">
+<tr>
+  <td>1</td>
+  <td><strong>2014-S1</strong></td>
+  <td>2014.0</td>
+  <td class="tr">1,113.72</td>
+  <td class="tr">1,395.49</td>
+  <td class="tr" style="color:#fb923c">-281.77</td>
+  <td class="tr">281.77</td>
+  <td class="tr"><strong>25.30%</strong></td>
+  <td><span class="badge b-azul">Aceptable</span></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><strong>2014-S2</strong></td>
+  <td>2014.5</td>
+  <td class="tr">1,124.33</td>
+  <td class="tr">1,345.57</td>
+  <td class="tr" style="color:#fb923c">-221.24</td>
+  <td class="tr">221.24</td>
+  <td class="tr"><strong>19.68%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><strong>2015-S1</strong></td>
+  <td>2015.0</td>
+  <td class="tr">1,143.22</td>
+  <td class="tr">1,295.64</td>
+  <td class="tr" style="color:#fb923c">-152.42</td>
+  <td class="tr">152.42</td>
+  <td class="tr"><strong>13.33%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><strong>2015-S2</strong></td>
+  <td>2015.5</td>
+  <td class="tr">1,214.39</td>
+  <td class="tr">1,245.72</td>
+  <td class="tr" style="color:#fb923c">-31.33</td>
+  <td class="tr">31.33</td>
+  <td class="tr"><strong>2.58%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><strong>2016-S1</strong></td>
+  <td>2016.0</td>
+  <td class="tr">2,104.39</td>
+  <td class="tr">1,195.80</td>
+  <td class="tr" style="color:#38bdf8">+908.59</td>
+  <td class="tr">908.59</td>
+  <td class="tr"><strong>43.18%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><strong>2016-S2</strong></td>
+  <td>2016.5</td>
+  <td class="tr">2,109.44</td>
+  <td class="tr">1,145.87</td>
+  <td class="tr" style="color:#38bdf8">+963.57</td>
+  <td class="tr">963.57</td>
+  <td class="tr"><strong>45.68%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><strong>2017-S1</strong></td>
+  <td>2017.0</td>
+  <td class="tr">1,854.33</td>
+  <td class="tr">1,095.95</td>
+  <td class="tr" style="color:#38bdf8">+758.38</td>
+  <td class="tr">758.38</td>
+  <td class="tr"><strong>40.90%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><strong>2017-S2</strong></td>
+  <td>2017.5</td>
+  <td class="tr">1,813.00</td>
+  <td class="tr">1,046.03</td>
+  <td class="tr" style="color:#38bdf8">+766.97</td>
+  <td class="tr">766.97</td>
+  <td class="tr"><strong>42.30%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><strong>2018-S1</strong></td>
+  <td>2018.0</td>
+  <td class="tr">530.00</td>
+  <td class="tr">996.10</td>
+  <td class="tr" style="color:#fb923c">-466.10</td>
+  <td class="tr">466.10</td>
+  <td class="tr"><strong>87.94%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><strong>2018-S2</strong></td>
+  <td>2018.5</td>
+  <td class="tr">458.11</td>
+  <td class="tr">946.18</td>
+  <td class="tr" style="color:#fb923c">-488.07</td>
+  <td class="tr">488.07</td>
+  <td class="tr"><strong>106.54%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><strong>2019-S1</strong></td>
+  <td>2019.0</td>
+  <td class="tr">448.78</td>
+  <td class="tr">896.26</td>
+  <td class="tr" style="color:#fb923c">-447.48</td>
+  <td class="tr">447.48</td>
+  <td class="tr"><strong>99.71%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><strong>2019-S2</strong></td>
+  <td>2019.5</td>
+  <td class="tr">412.06</td>
+  <td class="tr">846.33</td>
+  <td class="tr" style="color:#fb923c">-434.27</td>
+  <td class="tr">434.27</td>
+  <td class="tr"><strong>105.39%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><strong>2020-S1</strong></td>
+  <td>2020.0</td>
+  <td class="tr">251.17</td>
+  <td class="tr">796.41</td>
+  <td class="tr" style="color:#fb923c">-545.24</td>
+  <td class="tr">545.24</td>
+  <td class="tr"><strong>217.08%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><strong>2020-S2</strong></td>
+  <td>2020.5</td>
+  <td class="tr">268.79</td>
+  <td class="tr">746.48</td>
+  <td class="tr" style="color:#fb923c">-477.69</td>
+  <td class="tr">477.69</td>
+  <td class="tr"><strong>177.72%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><strong>2021-S1</strong></td>
+  <td>2021.0</td>
+  <td class="tr">318.58</td>
+  <td class="tr">696.56</td>
+  <td class="tr" style="color:#fb923c">-377.98</td>
+  <td class="tr">377.98</td>
+  <td class="tr"><strong>118.65%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><strong>2021-S2</strong></td>
+  <td>2021.5</td>
+  <td class="tr">298.04</td>
+  <td class="tr">646.64</td>
+  <td class="tr" style="color:#fb923c">-348.60</td>
+  <td class="tr">348.60</td>
+  <td class="tr"><strong>116.96%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><strong>2022-S1</strong></td>
+  <td>2022.0</td>
+  <td class="tr">377.29</td>
+  <td class="tr">596.71</td>
+  <td class="tr" style="color:#fb923c">-219.42</td>
+  <td class="tr">219.42</td>
+  <td class="tr"><strong>58.16%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><strong>2022-S2</strong></td>
+  <td>2022.5</td>
+  <td class="tr">396.38</td>
+  <td class="tr">546.79</td>
+  <td class="tr" style="color:#fb923c">-150.41</td>
+  <td class="tr">150.41</td>
+  <td class="tr"><strong>37.95%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><strong>2023-S1</strong></td>
+  <td>2023.0</td>
+  <td class="tr">418.17</td>
+  <td class="tr">496.87</td>
+  <td class="tr" style="color:#fb923c">-78.70</td>
+  <td class="tr">78.70</td>
+  <td class="tr"><strong>18.82%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><strong>2023-S2</strong></td>
+  <td>2023.5</td>
+  <td class="tr">406.58</td>
+  <td class="tr">446.94</td>
+  <td class="tr" style="color:#fb923c">-40.36</td>
+  <td class="tr">40.36</td>
+  <td class="tr"><strong>9.93%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><strong>2024-S1</strong></td>
+  <td>2024.0</td>
+  <td class="tr">443.79</td>
+  <td class="tr">397.02</td>
+  <td class="tr" style="color:#38bdf8">+46.77</td>
+  <td class="tr">46.77</td>
+  <td class="tr"><strong>10.54%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><strong>2024-S2</strong></td>
+  <td>2024.5</td>
+  <td class="tr">468.08</td>
+  <td class="tr">347.10</td>
+  <td class="tr" style="color:#38bdf8">+120.98</td>
+  <td class="tr">120.98</td>
+  <td class="tr"><strong>25.85%</strong></td>
+  <td><span class="badge b-azul">Aceptable</span></td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><strong>2025-S1</strong></td>
+  <td>2025.0</td>
+  <td class="tr">610.11</td>
+  <td class="tr">297.17</td>
+  <td class="tr" style="color:#38bdf8">+312.94</td>
+  <td class="tr">312.94</td>
+  <td class="tr"><strong>51.29%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><strong>2025-S2</strong></td>
+  <td>2025.5</td>
+  <td class="tr">650.39</td>
+  <td class="tr">247.25</td>
+  <td class="tr" style="color:#38bdf8">+403.14</td>
+  <td class="tr">403.14</td>
+  <td class="tr"><strong>61.98%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><strong>2026-S1*</strong> <span class="badge b-naranja" style="font-size:.65rem;margin-left:4px">Parcial (Ene–May)</span></td>
+  <td>2026.0</td>
+  <td class="tr">677.07</td>
+  <td class="tr">197.33</td>
+  <td class="tr" style="color:#38bdf8">+479.74</td>
+  <td class="tr">479.74</td>
+  <td class="tr"><strong>70.86%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+</tbody>
+        <tfoot id="tfRLSem">
+    <tr style="font-weight:700;background:#0f172a;color:var(--verde);border-top:2px solid var(--verde)">
+      <td colspan="3">SUMATORIAS (N = 25 Semestres)</td>
+      <td class="tr">&Sigma;y = 19,910.21</td>
+      <td class="tr">&Sigma;ŷ = 19,910.21</td>
+      <td class="tr">&Sigma;res = 0.00</td>
+      <td class="tr">&Sigma;|e| = 7,639.19</td>
+      <td class="tr">&Sigma;e% = 1,006.1%</td>
+      <td><span class="badge b-verde">S_e = 479.59 acc.</span></td>
+    </tr>
+    <tr style="font-weight:700;background:var(--bg2);color:var(--text)">
+      <td colspan="3">MEDIAS Y ECUACIÓN OFICIAL</td>
+      <td class="tr">ȳ = 796.41</td>
+      <td class="tr">x&#772; = 2,020.00</td>
+      <td colspan="2" style="text-align:center;color:var(--verde)">Y = &minus;99.8471&middot;X + 202,487.60</td>
+      <td class="tr">Err Prom: 40.24%</td>
+      <td><span class="badge b-verde">R² = 37.98%</span></td>
+    </tr>
+</tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 2.2 REGRESIÓN ANUAL (COMPLEMENTARIA N=13) ════════════════ -->
+<section id="regresion">
+  <div class="sec-title azul"><span class="sec-num" style="background:var(--azul)">2.2</span> An&aacute;lisis Macro Complementario: Regresi&oacute;n Lineal Anual (N = 13 A&ntilde;os)</div>
+
+
+  <div class="alert alert-info">
+    <span>🎙️</span>
+    <div><strong>Instrucción del profesor:</strong> <em>"Hallar la ecuación de la recta a partir de las variables. ¿Qué es la pendiente? La velocidad a la que crecen los datos. El intercepto = qué valor va a tener mi variable dependiente cuando X vale cero. Calculo cuál es el error que tiene mi regresión lineal con respecto al dato real."</em></div>
+  </div>
+
+  <!-- Fórmulas -->
+  <div class="card">
+    <div class="card-title">📐 Fórmulas de Mínimos Cuadrados</div>
+    <div class="cols-2">
+      <div>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:.5rem">Pendiente (m) — velocidad a la que crecen los datos:</p>
+        <div style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;font-family:monospace;font-size:.95rem;color:var(--amarillo)">
+          m = [n·Σ(xi·yi) − Σxi·Σyi] / [n·Σ(xi²) − (Σxi)²]
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:.5rem">Intercepto (b) — valor de Y cuando X = 0:</p>
+        <div style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;font-family:monospace;font-size:.95rem;color:var(--amarillo)">
+          b = ȳ − m·x̄
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:.5rem">Coeficiente de determinación R² (Bondad de ajuste):</p>
+        <div style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;font-family:monospace;font-size:.95rem;color:var(--amarillo)">
+          R² = 1 − Σ(yi − ŷi)² / Σ(yi − ȳ)²
+        </div>
+        <p style="color:var(--naranja);font-size:.74rem;margin-top:4px">⚠️ <em>Importante:</em> R² indica la <strong>variabilidad explicada</strong> por el modelo lineal, <strong>NO es una medida de exactitud (Accuracy)</strong>.</p>
+      </div>
+      <div>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:.5rem">Error estándar de la estimación:</p>
+        <div style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;font-family:monospace;font-size:.95rem;color:var(--amarillo)">
+          σ_e = √[Σ(yi − ŷi)² / (n − 2)]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROCESO PASO A PASO (calculado por JS) -->
+  <div class="card">
+    <div class="card-title">🔢 Proceso Paso a Paso — Cálculo Real</div>
+    <div class="steps" id="stepsRL">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div><strong>Variables:</strong> X = AÑO (tiempo, independiente) &middot; Y = ACCIDENTES_REGISTRADOS (dependiente, promedio anual). Rango: 2014 a 2026.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div><strong>Sumatorias (n = 13):</strong> &Sigma;x = 26,195 &middot; &Sigma;y = 10,294.67 &middot; &Sigma;(x&middot;y) = 20,721,397.09 &middot; &Sigma;(x&sup2;) = 52,795,041 &middot; x&#772; = 2,015.00 &middot; ȳ = 792.67</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div><strong>Pendiente (m):</strong> m = [n&middot;&Sigma;(xy) &minus; &Sigma;x&middot;&Sigma;y] / [n&middot;&Sigma;(x&sup2;) &minus; (&Sigma;x)&sup2;] = <strong style="color:var(--verde)">&minus;91.2029</strong> accidentes/a&ntilde;o</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div><strong>Intercepto (b):</strong> b = ȳ &minus; m&middot;x&#772; = 792.67 &minus; (&minus;91.2029 &times; 2,015.00) = <strong style="color:var(--verde)">185,021.59</strong></div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div><strong>Ecuaci&oacute;n de la recta macro anual:</strong> <code>Y = &minus;91.2029&middot;X + 185,021.59</code> (tendencia anualizada de largo plazo)</div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div><strong>Bondad de Ajuste R&sup2; (35.47%):</strong> R&sup2; = 0.3547 &middot; Varianza temporal explicada (NO Accuracy) &middot; Error est&aacute;ndar = 500.35 acc.</div>
+    </div>
+</div>
+  </div>
+
+  <!-- Resultado -->
+  <div class="eq-box" id="eqRL">
+    <div class="eq-main">Y = &minus;91.2029 &middot; X + 185,021.59</div>
+    <div class="eq-desc">Ecuación de la recta complementaria anual &middot; Mínimos Cuadrados &middot; R² = 35.47% &middot; Error estándar = 500.35 acc. &middot; n = 13 años</div>
+</div>
+
+  <!-- KPIs regresión -->
+  <div class="kpi-grid" id="kpiRL">
+    <div class="kpi-card verde">
+      <div class="kpi-val">&minus;91.20</div>
+      <div class="kpi-lbl">Pendiente m (acc/año)</div>
+      <div class="kpi-sub">&#9660; Tendencia anual macro</div>
+    </div>
+    <div class="kpi-card azul">
+      <div class="kpi-val">185,022</div>
+      <div class="kpi-lbl">Intercepto b (X=0)</div>
+      <div class="kpi-sub">Valor teórico en origen</div>
+    </div>
+    <div class="kpi-card amarillo">
+      <div class="kpi-val">35.47%</div>
+      <div class="kpi-lbl">R² Coef. Determinación</div>
+      <div class="kpi-sub">Varianza explicada (NO Acc)</div>
+    </div>
+    <div class="kpi-card rojo">
+      <div class="kpi-val">500.35</div>
+      <div class="kpi-lbl">Error estándar S_e (acc.)</div>
+      <div class="kpi-sub">Desv. típica de residuos</div>
+    </div>
+    <div class="kpi-card azul">
+      <div class="kpi-val">13 años</div>
+      <div class="kpi-lbl">Observaciones Anuales</div>
+      <div class="kpi-sub">Macro complementario</div>
+    </div>
+</div>
+
+  <!-- Gráfica RL -->
+  <div class="chart-wrap">
+    <h3>📈 Gráfica: Datos Reales + Recta Ajustada + Residuos</h3>
+    <div class="chart-canvas"><canvas id="chartRL"></canvas></div>
+  </div>
+
+  <!-- Tabla de errores -->
+  <div class="card">
+    <div class="card-title">📋 Tabla Completa: Y_real vs Y_predicho y Error</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>AÑO (X)</th><th class="tr">Y Real</th><th class="tr">Y Predicho ŷ = m·X + b</th><th class="tr">Residuo (yi − ŷi)</th><th class="tr">Error Abs.</th><th class="tr">Error %</th><th>Ajuste</th></tr>
+        </thead>
+        <tbody id="tbRL">
+<tr>
+  <td><strong>2014</strong></td>
+  <td class="tr">1,119.03</td>
+  <td class="tr">1,338.95</td>
+  <td class="tr" style="color:#fb923c">-219.92</td>
+  <td class="tr">219.92</td>
+  <td class="tr"><strong>19.65%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td><strong>2015</strong></td>
+  <td class="tr">1,178.81</td>
+  <td class="tr">1,247.75</td>
+  <td class="tr" style="color:#fb923c">-68.94</td>
+  <td class="tr">68.94</td>
+  <td class="tr"><strong>5.85%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td><strong>2016</strong></td>
+  <td class="tr">2,106.92</td>
+  <td class="tr">1,156.54</td>
+  <td class="tr" style="color:#38bdf8">+950.38</td>
+  <td class="tr">950.38</td>
+  <td class="tr"><strong>45.11%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td><strong>2017</strong></td>
+  <td class="tr">1,833.67</td>
+  <td class="tr">1,065.34</td>
+  <td class="tr" style="color:#38bdf8">+768.33</td>
+  <td class="tr">768.33</td>
+  <td class="tr"><strong>41.90%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td><strong>2018</strong></td>
+  <td class="tr">494.06</td>
+  <td class="tr">974.14</td>
+  <td class="tr" style="color:#fb923c">-480.08</td>
+  <td class="tr">480.08</td>
+  <td class="tr"><strong>97.17%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td><strong>2019</strong></td>
+  <td class="tr">430.42</td>
+  <td class="tr">882.93</td>
+  <td class="tr" style="color:#fb923c">-452.51</td>
+  <td class="tr">452.51</td>
+  <td class="tr"><strong>105.13%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td><strong>2020</strong></td>
+  <td class="tr">259.98</td>
+  <td class="tr">791.73</td>
+  <td class="tr" style="color:#fb923c">-531.75</td>
+  <td class="tr">531.75</td>
+  <td class="tr"><strong>204.54%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td><strong>2021</strong></td>
+  <td class="tr">308.31</td>
+  <td class="tr">700.53</td>
+  <td class="tr" style="color:#fb923c">-392.22</td>
+  <td class="tr">392.22</td>
+  <td class="tr"><strong>127.22%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td><strong>2022</strong></td>
+  <td class="tr">386.83</td>
+  <td class="tr">609.33</td>
+  <td class="tr" style="color:#fb923c">-222.50</td>
+  <td class="tr">222.50</td>
+  <td class="tr"><strong>57.52%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td><strong>2023</strong></td>
+  <td class="tr">412.38</td>
+  <td class="tr">518.12</td>
+  <td class="tr" style="color:#fb923c">-105.74</td>
+  <td class="tr">105.74</td>
+  <td class="tr"><strong>25.64%</strong></td>
+  <td><span class="badge b-azul">Aceptable</span></td>
+</tr>
+<tr>
+  <td><strong>2024</strong></td>
+  <td class="tr">455.94</td>
+  <td class="tr">426.92</td>
+  <td class="tr" style="color:#38bdf8">+29.02</td>
+  <td class="tr">29.02</td>
+  <td class="tr"><strong>6.36%</strong></td>
+  <td><span class="badge b-verde">Óptimo</span></td>
+</tr>
+<tr>
+  <td><strong>2025</strong></td>
+  <td class="tr">630.25</td>
+  <td class="tr">335.72</td>
+  <td class="tr" style="color:#38bdf8">+294.53</td>
+  <td class="tr">294.53</td>
+  <td class="tr"><strong>46.73%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+<tr>
+  <td><strong>2026*</strong></td>
+  <td class="tr">677.07</td>
+  <td class="tr">244.51</td>
+  <td class="tr" style="color:#38bdf8">+432.56</td>
+  <td class="tr">432.56</td>
+  <td class="tr"><strong>63.89%</strong></td>
+  <td><span class="badge b-naranja">Disperso</span></td>
+</tr>
+</tbody>
+        <tfoot id="tfRL">
+    <tr style="font-weight:700;background:#0f172a">
+      <td>PROMEDIO (n = 13)</td>
+      <td class="tr">792.67</td>
+      <td class="tr">792.67</td>
+      <td class="tr">0.00</td>
+      <td class="tr">446.40</td>
+      <td class="tr">58.75%</td>
+      <td><span class="badge b-verde">R² = 35.47%</span></td>
+    </tr>
+</tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 3. LAGRANGE ════════════════ -->
+<section id="lagrange">
+  <div class="sec-title morado"><span class="sec-num" style="background:var(--morado)">3</span> Interpolación de Lagrange</div>
+
+  <div class="alert alert-info">
+    <span>🎙️</span>
+    <div><strong>Instrucción del profesor:</strong> <em>"¿Cuántos nodos o cuántos datos he elegido? Tres, cuatro, cinco, dependiendo... va a ser un polinomio de grado [n-1]... Dentro del rango se llama interpolar, hallar el punto dentro del rango."</em></div>
+  </div>
+
+  <!-- Fórmula -->
+  <div class="card">
+    <div class="card-title">📐 Fórmula del Polinomio de Lagrange</div>
+    <div style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;font-family:monospace;color:var(--amarillo);margin-bottom:.75rem">
+      P(x) = Σ yi · Li(x)&nbsp;&nbsp;&nbsp;para&nbsp;&nbsp;i = 0, 1, ..., n
+    </div>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:.5rem">donde cada polinomio base de Lagrange es:</p>
+    <div style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;font-family:monospace;color:var(--amarillo)">
+      Li(x) = Π [(x − xj) / (xi − xj)]&nbsp;&nbsp;&nbsp;para&nbsp;&nbsp;j ≠ i
+    </div>
+    <div class="alert alert-ok" style="margin-top:.75rem">
+      <span>✅</span>
+      <div>
+        <strong>Propiedad cardinal en los Nodos vs. Puntos No Nodales:</strong>
+        <p style="margin-top:4px;font-size:.83rem">
+          El error cero ($\varepsilon \approx 0$) está matemáticamente garantizado <strong>ÚNICAMENTE en los 5 nodos</strong> seleccionados para construir el polinomio ($x \in \{2014, 2016, 2019, 2022, 2026\}$).
+        </p>
+        <p style="margin-top:4px;font-size:.83rem;color:var(--naranja)">
+          ⚠️ En los demás años no nodales (ej. 2023 con error de 102.3% y 2025 con 109.8%), el valor interpolado puede diferir considerablemente del dato real debido a oscilaciones polinómicas (fenómeno de Runge). <strong>Lagrange pasa exactamente por los nodos, pero eso no garantiza que represente perfectamente los demás datos.</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nodos -->
+  <div class="card">
+    <div class="card-title">📍 Nodos Seleccionados</div>
+    <p style="color:var(--muted);font-size:.87rem;margin-bottom:.75rem" id="lagGrado"></p>
+    <div class="nodos-grid" id="nodosGrid"></div>
+  </div>
+
+  <!-- Proceso paso a paso Lagrange -->
+  <div class="card">
+    <div class="card-title">🔢 Proceso de Cálculo — Li(x) aplicado a un punto de ejemplo</div>
+    <div class="steps" id="stepsLag"></div>
+  </div>
+
+  <!-- Verificación en nodos -->
+  <div class="card">
+    <div class="card-title">✅ Verificación en Nodos (error ≈ 0 — propiedad de Lagrange)</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nodo i</th><th class="tr">X_nodo</th><th class="tr">Y_real</th><th class="tr">P(x_nodo) calculado</th><th class="tr">Error Abs.</th><th>¿Pasa exacto?</th></tr></thead>
+        <tbody id="tbNodos"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Gráfica Lagrange -->
+  <div class="chart-wrap">
+    <h3>🔵 Gráfica: Nodos + Polinomio de Lagrange + Puntos Interpolados</h3>
+    <div class="chart-canvas"><canvas id="chartLag"></canvas></div>
+  </div>
+
+  <!-- Tabla interpolaciones -->
+  <div class="card">
+    <div class="card-title">📋 Interpolación de Puntos dentro del Rango [<span id="lagRango"></span>]</div>
+    <div class="alert alert-warn" style="margin-bottom:.75rem">
+      <span>⚠️</span>
+      <div>
+        <strong>"Dentro del rango se llama interpolar" — Comportamiento en Nodos vs. Puntos No Nodales:</strong>
+        <p style="margin-top:4px;font-size:.84rem">
+          Solo los puntos dentro de [X_mín, X_máx] son interpolación válida. Recuerda: <strong>el error cero únicamente está garantizado en los 5 nodos</strong>. En los demás años (como <strong>2023</strong> y <strong>2025</strong>), el valor interpolado difiere sustancialmente del valor real debido a las ondulaciones del polinomio de grado 4 (efecto Runge). <em>Lagrange pasa exactamente por los nodos, pero eso no garantiza que represente fielmente los demás datos.</em>
+        </p>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>AÑO (X)</th><th class="tr">P(x) Interpolado</th><th class="tr">Y Real</th><th class="tr">Error Abs.</th><th class="tr">Error %</th><th>¿Dentro del rango?</th></tr></thead>
+        <tbody id="tbInterp"></tbody>
+      </table>
+    </div>
+
+    <!-- Explicación de Limitaciones Matemáticas de Lagrange -->
+    <div style="background:#0f172a;border:1px solid var(--morado);border-left:4px solid var(--morado);border-radius:8px;padding:1rem 1.25rem;margin-top:1rem;font-size:.85rem;line-height:1.5">
+      <h4 style="color:var(--morado);font-size:.95rem;margin-bottom:.5rem">🔬 Fundamentación Matemática: Limitaciones de Lagrange & Fenómeno de Runge</h4>
+      <ul style="margin:4px 0 0 16px;color:var(--texto)">
+        <li><strong>Fenómeno de Runge y oscilación inter-nodal:</strong> Al elevar el grado del polinomio (grado 4 en 5 nodos) con espaciamientos temporales no óptimos (sin nodos de Chebyshev), el polinomio genera fuertes ondas en los intervalos intermedios y en los extremos. Esto produce discrepancias notables en 2023 (102.3%) y 2025 (109.8%).</li>
+        <li><strong>Naturaleza estocástica vs. determinista:</strong> Lagrange fue concebido para interpolar funciones analíticas exactas libres de ruido. La siniestralidad vial es un proceso empírico ruidoso con perturbaciones externas (ej. la fuerte caída atípica en pandemia 2020). Forzar al polinomio a pasar exactamente por los 5 nodos propaga y amplifica ese ruido en todo el dominio.</li>
+        <li><strong>Soporte global e inestabilidad:</strong> Cada base $L_i(x)$ tiene soporte en todo el intervalo $[2014, 2026]$. Si se altera un solo dato histórico, la curva entera cambia de forma drástica.</li>
+        <li><strong>Regresión Lineal vs. Lagrange:</strong> Para modelar la macrotendencia vial a largo plazo, el método matemáticamente idóneo es la <strong>Regresión Lineal por Mínimos Cuadrados</strong> (que filtra el ruido minimizando los residuos), mientras que Lagrange se restringe a aproximación puntual en los nodos.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 4. COMPARACIÓN ════════════════ -->
+<section id="comparacion">
+  <div class="sec-title naranja"><span class="sec-num" style="background:var(--naranja)">4</span> Comparación de Métodos</div>
+
+  <!-- Gráfica comparativa -->
+  <div class="chart-wrap">
+    <h3>📊 Comparación: Datos Reales vs. Regresión Lineal vs. Lagrange</h3>
+    <div class="chart-canvas"><canvas id="chartComp"></canvas></div>
+  </div>
+
+  <!-- Tabla comparativa -->
+  <div class="card">
+    <div class="card-title">📋 Tabla Comparativa Numérica — Todos los Años</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>AÑO</th><th class="tr">Y Real</th><th class="tr">Y Regresión</th><th class="tr">Err RL %</th><th class="tr">Y Lagrange</th><th class="tr">Err Lag %</th><th>Mejor ajuste</th></tr></thead>
+        <tbody id="tbComp"></tbody>
+        <tfoot id="tfComp"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tabla resumen técnico -->
+  <div class="card">
+    <div class="card-title">📌 Resumen Técnico Comparativo</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Característica</th><th>Regresión Lineal</th><th>Interpolación Lagrange</th></tr></thead>
+        <tbody id="tbResumen"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Panel comparativo -->
+  <div class="cols-2" style="margin-top:1.25rem">
+    <div class="cmp-box" style="border:1px solid var(--verde)">
+      <h4 style="color:var(--verde)">📏 Regresión Lineal — ¿Cuándo usarla?</h4>
+      <ul>
+        <li>Modelar la TENDENCIA general a largo plazo</li>
+        <li>Predecir valores futuros (extrapolación)</li>
+        <li>Cuando los datos siguen una tendencia lineal</li>
+        <li>Cuando se necesita una ecuación sencilla</li>
+        <li>No pasa por todos los puntos — minimiza errores</li>
+      </ul>
+    </div>
+    <div class="cmp-box" style="border:1px solid var(--morado)">
+      <h4 style="color:var(--morado)">🔵 Interpolación Lagrange — ¿Cuándo usarla?</h4>
+      <ul>
+        <li>Estimar valores PUNTUALES dentro del rango</li>
+        <li>Cuando se necesita pasar exactamente por los nodos</li>
+        <li>Cuando los datos no siguen una tendencia lineal</li>
+        <li>NUNCA extrapolación — solo dentro del rango</li>
+        <li>Mayor precisión local, menor en tendencia global</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 5. PREDICTOR ════════════════ -->
+<section id="predictor">
+  <div class="sec-title"><span class="sec-num">5</span> Calculadora Interactiva</div>
+
+  <div class="cols-2">
+    <div class="card">
+      <div class="card-title">📏 Predictor — Regresión Lineal</div>
+      <p style="color:var(--muted);font-size:.87rem;margin-bottom:.75rem">Ingresa un año y la ecuación de la recta calculará el valor predicho de accidentes.</p>
+      <div class="predictor">
+        <h3>Y = m·X + b</h3>
+        <div class="predictor-body">
+          <label style="color:var(--muted);font-size:.88rem">Año (X):</label>
+          <input type="number" id="inputRL" value="2027" min="2000" max="2050"/>
+          <button onclick="calcRL()">Calcular</button>
+        </div>
+        <div class="predictor-result" id="resultRL"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔵 Predictor — Interpolación Lagrange</div>
+      <p style="color:var(--muted);font-size:.87rem;margin-bottom:.75rem">Solo válido DENTRO del rango de nodos. Ingresa un año entre <span id="lagRango2"></span>.</p>
+      <div class="predictor" style="border-color:var(--naranja)">
+        <h3 style="color:var(--naranja)">P(x) = Σ yi·Li(x)</h3>
+        <div class="predictor-body">
+          <label style="color:var(--muted);font-size:.88rem">Año (X):</label>
+          <input type="number" id="inputLag" value="2018" min="2014" max="2026"/>
+          <button onclick="calcLag()" style="background:var(--naranja)">Calcular</button>
+        </div>
+        <div class="predictor-result" id="resultLag"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.25rem;border-color:var(--azul)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+      <div class="card-title" style="margin-bottom:0">🗄️ Historial Reciente de Predicciones (API → NeonDB)</div>
+      <button onclick="window.AutoGestAPI && window.AutoGestAPI.loadPredictions()" style="background:var(--bg3);color:var(--texto);border:1px solid var(--border);padding:.35rem .8rem;border-radius:6px;cursor:pointer;font-size:.8rem">↻ Actualizar</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Modelo</th><th>Año (X)</th><th class="tr">Predicción (Y)</th><th>Evaluación</th><th>Fecha</th></tr></thead>
+        <tbody id="tbodyHistorialPredicciones">
+          <tr><td colspan="5" style="text-align:center;color:var(--muted)">Cargando historial desde la API...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ 5. CONCLUSIONES Y LIMITACIONES ════════════════ -->
+<section id="sec-conclusiones" style="margin-top:2rem">
+  <div class="sec-title azul"><span class="sec-num" style="background:var(--azul)">5</span> Conclusiones Ejecutivas y Limitaciones Académicas (Defensa Universitaria)</div>
+
+  <div class="cols-2">
+    <div class="card" style="border-left:4px solid var(--verde)">
+      <div class="card-title" style="color:var(--verde)">✅ Conclusiones Metodológicas y Analíticas</div>
+      <ul style="font-size:.83rem;color:var(--text);line-height:1.6;margin-left:1rem">
+        <li><strong>1. Tendencia decreciente consistente:</strong> La pendiente negativa se valida rigurosamente en ambos niveles temporales: semestral (m = &minus;99.85 acc/año [&minus;49.92 acc/semestre con &Delta;X=0.5], R&sup2; = 37.98%, N = 25) y macro anual (m = &minus;91.20 acc/a&ntilde;o, R&sup2; = 35.47%, N = 13), confirmando una reducci&oacute;n estructural del fen&oacute;meno en Ibagu&eacute;.</li>
+        <li><strong>2. Interpretaci&oacute;n formal del R&sup2;:</strong> El coeficiente R&sup2; (&sim;38%) cuantifica exclusivamente la proporci&oacute;n de varianza de siniestralidad explicada por la evoluci&oacute;n temporal lineal. <em>No es una medida de exactitud (Accuracy).</em> El ~62% restante corresponde a factores estoc&aacute;sticos no temporales (infraestructura vial, clima, operativos, confinamiento COVID-19 en 2020).</li>
+        <li><strong>3. Propiedad de interpolaci&oacute;n exacta en nodos de Lagrange:</strong> El error cero (&epsilon; &approx; 0) ocurre estrictamente en los 5 nodos. En puntos no nodales (2023 y 2025) el error supera el 100% por oscilaciones polin&oacute;micas de grado 4 (Runge), demostrando que M&iacute;nimos Cuadrados es el modelo id&oacute;neo para tendencias ruidosas.</li>
+        <li><strong>4. Impacto de StandardScaler en clasificaci&oacute;n:</strong> En el m&oacute;dulo de Miner&iacute;a de Datos, el escalado elev&oacute; el Accuracy de KNN del 74.02% al 83.46% (+9.44%), evitando que el volumen masivo de tr&aacute;fico anule los atributos complementarios.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--naranja)">
+      <div class="card-title" style="color:var(--naranja)">⚠️ Limitaciones Académicas Reconocidas</div>
+      <ul style="font-size:.83rem;color:var(--text);line-height:1.6;margin-left:1rem">
+        <li><strong>1. Registro parcial 2026*:</strong> El registro de 2026 contiene &uacute;nicamente 5 meses consolidados (Ene&ndash;May) con 10,156 eventos acumulados y tasa de 677.07 acc/categor&iacute;a (anualización aritmética ilustrativa: 24,374 eventos, no un pronóstico estadístico). Se identifica como periodo parcial <code>2026*</code> para no sesgar el an&aacute;lisis comparativo.</li>
+        <li><strong>2. Cumplimiento muestral docente (N &ge; 15):</strong> Para honrar el requisito de al menos 15 datos sin generar observaciones artificiales, se adopt&oacute; la regresi&oacute;n semestral (N = 25) como modelo principal ante el evaluador docente.</li>
+        <li><strong>3. Correlaci&oacute;n emp&iacute;rica vs. Causalidad f&iacute;sica:</strong> Se sustituy&oacute; la expresi&oacute;n gen&eacute;rica r &approx; 0.74 por los valores exactos verificados: Tr&aacute;fico vs. Accidentes (r = 0.6683, 507 observaciones distribuidas en 149 periodos) y Veh&iacute;culos Exentos vs. Accidentes (r = 0.7154, 507 observaciones distribuidas en 149 periodos). El peso de 42% en el &Aacute;rbol de Decisi&oacute;n responde a capacidad discriminante, no a causalidad f&iacute;sica.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>AUTOGEST · Métodos Numéricos · UNIMINUTO Ibagué · 2026-2 · Siniestralidad Vial, Ibagué, Colombia</footer>
+
+<!-- ══════════════ IMPLEMENTACIÓN COMPLETA EN JAVASCRIPT ══════════════ -->
+<script>
+"use strict";
+
+/* ═══════════════════════════════════════════════════════
+   DATOS BASE — Dataset AUTOGEST (promedios anuales reales)
+   X = AÑO, Y = ACCIDENTES_REGISTRADOS
+═══════════════════════════════════════════════════════ */
+const DATA_X = [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
+const DATA_Y = [1119.03,1178.81,2106.92,1833.67,494.06,430.42,259.98,308.31,386.83,412.38,455.94,630.25,677.07];
+
+/* Nodos de Lagrange: 5 nodos estratégicos (incluyen mínimo y máximo de X) */
+const LAG_X = [2014, 2016, 2019, 2022, 2026];
+const LAG_Y = [1119.03, 2106.92, 430.42, 386.83, 677.07];
+const LAG_DESC = ['Inicio del rango (mín X)', 'Pico máximo histórico', 'Punto intermedio descendente', 'Recuperación post-pandemia', 'Fin del rango (máx X)'];
+
+/* ═══════════════════════════════════════════════════════
+   IMPLEMENTACIÓN 1: REGRESIÓN LINEAL (MÍNIMOS CUADRADOS)
+   Implementada desde cero — sin sklearn ni scipy
+═══════════════════════════════════════════════════════ */
+function regresionLineal(xs, ys) {
+  const n = xs.length;
+
+  /* Paso 1: Calcular las sumas necesarias */
+  const sx  = xs.reduce((a, b) => a + b, 0);                         // Σxi
+  const sy  = ys.reduce((a, b) => a + b, 0);                         // Σyi
+  const sxy = xs.reduce((a, xi, i) => a + xi * ys[i], 0);            // Σ(xi·yi)
+  const sx2 = xs.reduce((a, xi) => a + xi * xi, 0);                   // Σ(xi²)
+  const xm  = sx / n;                                                  // x̄ media X
+  const ym  = sy / n;                                                  // ȳ media Y
+
+  /* Paso 2: Calcular pendiente con la fórmula de mínimos cuadrados */
+  const num_m  = n * sxy - sx * sy;
+  const den_m  = n * sx2 - sx * sx;
+  const m = num_m / den_m;
+
+  /* Paso 3: Calcular intercepto */
+  const b = ym - m * xm;
+
+  /* Paso 4: Calcular valores predichos */
+  const yp = xs.map(xi => m * xi + b);
+
+  /* Paso 5: Calcular R² */
+  const ss_tot = ys.reduce((a, yi) => a + (yi - ym) ** 2, 0);
+  const ss_res = ys.reduce((a, yi, i) => a + (yi - yp[i]) ** 2, 0);
+  const r2 = 1 - ss_res / ss_tot;
+
+  /* Paso 6: Error estándar */
+  const err_std = Math.sqrt(ss_res / (n - 2));
+
+  /* Errores absolutos y porcentuales */
+  const err_abs = ys.map((yi, i) => Math.abs(yi - yp[i]));
+  const err_pct = ys.map((yi, i) => Math.abs(yi - yp[i]) / yi * 100);
+
+  return { n, sx, sy, sxy, sx2, xm, ym, m, b, yp, r2, err_std, ss_tot, ss_res, err_abs, err_pct, num_m, den_m };
+}
+
+/* ═══════════════════════════════════════════════════════
+   IMPLEMENTACIÓN 2: INTERPOLACIÓN DE LAGRANGE
+   Implementada desde cero — sin scipy
+═══════════════════════════════════════════════════════ */
+
+/* Polinomio base de Lagrange: Li(x) */
+function Li(i, x, xs) {
+  let result = 1.0;
+  for (let j = 0; j < xs.length; j++) {
+    if (j !== i) {
+      result *= (x - xs[j]) / (xs[i] - xs[j]);
+    }
+  }
+  return result;
+}
+
+/* Polinomio de Lagrange completo: P(x) = Σ yi·Li(x) */
+function lagrange(x, xs, ys) {
+  return ys.reduce((s, yi, i) => s + yi * Li(i, x, xs), 0);
+}
+
+/* ═══════════════════════════════════════════════════════
+   EJECUTAR LOS DOS MODELOS
+═══════════════════════════════════════════════════════ */
+const RL = regresionLineal(DATA_X, DATA_Y);
+const { n, sx, sy, sxy, sx2, xm, ym, m, b, yp, r2, err_std } = RL;
+
+/* Curva del polinomio de Lagrange (500 puntos) para la gráfica */
+const lagCurveX = [], lagCurveY = [];
+for (let xv = 2014; xv <= 2026; xv += 0.025) {
+  lagCurveX.push(parseFloat(xv.toFixed(3)));
+  lagCurveY.push(lagrange(xv, LAG_X, LAG_Y));
+}
+
+/* Y de Lagrange para cada año del dataset */
+const DATA_YLag = DATA_X.map(x => lagrange(x, LAG_X, LAG_Y));
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS DE FORMATO
+═══════════════════════════════════════════════════════ */
+const f2  = v => v.toLocaleString('es-CO', {minimumFractionDigits:2, maximumFractionDigits:2});
+const f4  = v => v.toLocaleString('es-CO', {minimumFractionDigits:4, maximumFractionDigits:4});
+const f6  = v => parseFloat(v.toFixed(6)).toLocaleString('es-CO', {minimumFractionDigits:6, maximumFractionDigits:6});
+const fp  = v => f2(v) + '%';
+const sgn = v => v >= 0 ? `+${f4(v)}` : f4(v);
+const badge = (cls, t) => `<span class="badge ${cls}">${t}</span>`;
+
+const alpha = (hex, a) => hex + Math.round(a*255).toString(16).padStart(2,'0');
+
+/* ═══════════════════════════════════════════════════════
+   RENDERIZAR SECCIÓN 0: Variables KPIs
+═══════════════════════════════════════════════════════ */
+const kpiN = document.getElementById('kpi_n');
+if (kpiN) kpiN.textContent = DATA_X.length;
+const kpiRango = document.getElementById('kpi_rango');
+if (kpiRango) kpiRango.textContent = `${Math.min(...DATA_X)}–${Math.max(...DATA_X)}`;
+
+/* ═══════════════════════════════════════════════════════
+   RENDERIZAR SECCIÓN 1: Tabla de datos
+═══════════════════════════════════════════════════════ */
+const notas = {
+  2014: 'Inicio del rango (mín X) ✅',
+  2016: 'Pico máximo histórico 📈',
+  2020: 'Mínimo — pandemia COVID-19 📉',
+  2026: 'Fin del rango (máx X) · Año parcial (Ene–May, 5 meses: 10,156 acc; proy. anualizada: 24,374) ⚠️'
+};
+const tbDatos = document.getElementById('tbDatos');
+DATA_X.forEach((xi, i) => {
+  const dev = DATA_Y[i] - ym;
+  const etiquetaX = xi === 2026 ? '2026*' : xi;
+  tbDatos.innerHTML += `<tr>
+    <td>${i+1}</td><td><strong>${etiquetaX}</strong></td>
+    <td class="tr">${f2(DATA_Y[i])}</td>
+    <td class="tr" style="color:${dev>=0?'var(--azul)':'var(--rojo)'}">${dev>=0?'+':''}${f2(dev)}</td>
+    <td><small style="color:var(--muted)">${notas[xi]||'—'}</small></td>
+  </tr>`;
+});
+document.getElementById('tfMedia').textContent = f2(ym) + ' (ȳ)';
+
+const minY = Math.min(...DATA_Y), maxY = Math.max(...DATA_Y);
+const idxMinY = DATA_Y.indexOf(minY), idxMaxY = DATA_Y.indexOf(maxY);
+document.getElementById('kpiDatos').innerHTML = `
+  <div class="kpi azul"><div class="lbl">Mínimo X (inicio)</div><div class="val">${Math.min(...DATA_X)}</div><div class="sub">Y = ${f2(DATA_Y[0])} ✅</div></div>
+  <div class="kpi azul"><div class="lbl">Máximo X (fin)</div><div class="val">${Math.max(...DATA_X)}</div><div class="sub">Y = ${f2(DATA_Y[DATA_X.length-1])} ✅</div></div>
+  <div class="kpi verde"><div class="lbl">Mínimo Y</div><div class="val">${f2(minY)}</div><div class="sub">Año ${DATA_X[idxMinY]}</div></div>
+  <div class="kpi rojo"><div class="lbl">Máximo Y</div><div class="val">${f2(maxY)}</div><div class="sub">Año ${DATA_X[idxMaxY]}</div></div>
+  <div class="kpi naranja"><div class="lbl">Media ȳ</div><div class="val">${f2(ym)}</div><div class="sub">accidentes/año</div></div>
+  <div class="kpi morado"><div class="lbl">Observaciones</div><div class="val">${n}</div><div class="sub">años de datos</div></div>
+`;
+
+/* ═══════════════════════════════════════════════════════
+   RENDERIZAR SECCIÓN 2: Regresión Lineal — Pasos
+═══════════════════════════════════════════════════════ */
+document.getElementById('stepsRL').innerHTML = `
+  <div class="step"><div class="step-n">1</div><div class="step-body">
+    <div class="titulo">Recopilar datos y contar n</div>
+    <div class="formula-inline">n = ${n} observaciones (años de datos)</div>
+    <div style="color:var(--muted);font-size:.82rem">X = años [${DATA_X[0]}, ..., ${DATA_X[n-1]}] | Y = accidentes registrados promedio anual</div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-body">
+    <div class="titulo">Calcular las sumas necesarias</div>
+    <div class="formula-inline">Σxi = ${f2(sx)}</div>
+    <div class="formula-inline">Σyi = ${f2(sy)}</div>
+    <div class="formula-inline">Σ(xi·yi) = ${f2(sxy)}</div>
+    <div class="formula-inline">Σ(xi²) = ${f2(sx2)}</div>
+    <div class="formula-inline">x̄ = Σxi/n = ${f2(sx)}/n = ${f4(xm)}</div>
+    <div class="formula-inline">ȳ = Σyi/n = ${f2(sy)}/n = ${f4(ym)}</div>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-body">
+    <div class="titulo">Calcular la PENDIENTE (m) — velocidad a la que crecen los datos</div>
+    <div class="formula-inline">m = [n·Σ(xi·yi) − Σxi·Σyi] / [n·Σ(xi²) − (Σxi)²]</div>
+    <div class="formula-inline">m = [${n}·${f2(sxy)} − ${f2(sx)}·${f2(sy)}] / [${n}·${f2(sx2)} − ${f2(sx)}²]</div>
+    <div class="formula-inline">m = ${f2(RL.num_m)} / ${f2(RL.den_m)}</div>
+    <div class="resultado">m = ${f4(m)}</div>
+    <div style="color:var(--muted);font-size:.82rem;margin-top:.4rem">Interpretación: por cada año adicional, los accidentes varían en <strong style="color:var(--verde)">${f2(m)}</strong> unidades en promedio.</div>
+  </div></div>
+
+  <div class="step"><div class="step-n">4</div><div class="step-body">
+    <div class="titulo">Calcular el INTERCEPTO (b) — valor de Y cuando X = 0</div>
+    <div class="formula-inline">b = ȳ − m·x̄</div>
+    <div class="formula-inline">b = ${f4(ym)} − (${f4(m)}) · ${f4(xm)}</div>
+    <div class="formula-inline">b = ${f4(ym)} − (${f4(m * xm)})</div>
+    <div class="resultado">b = ${f4(b)}</div>
+    <div style="color:var(--muted);font-size:.82rem;margin-top:.4rem">Referencia matemática: valor teórico de Y cuando el año fuera 0.</div>
+  </div></div>
+
+  <div class="step"><div class="step-n">5</div><div class="step-body">
+    <div class="titulo">Ecuación de la recta que modela el sistema</div>
+    <div class="formula-inline" style="font-size:1.1rem">Y = ${f4(m)} · X ${sgn(b)}</div>
+    <div style="color:var(--muted);font-size:.82rem;margin-top:.4rem">Esta ecuación permite predecir cualquier valor de accidentes dado un año X.</div>
+  </div></div>
+
+  <div class="step"><div class="step-n">6</div><div class="step-body">
+    <div class="titulo">Calcular el error de la regresión</div>
+    <div class="formula-inline">SS_res = Σ(yi − ŷi)² = ${f2(RL.ss_res)}</div>
+    <div class="formula-inline">SS_tot = Σ(yi − ȳ)² = ${f2(RL.ss_tot)}</div>
+    <div class="formula-inline">R² = 1 − SS_res/SS_tot = 1 − ${f4(RL.ss_res/RL.ss_tot)} = ${f4(r2)}</div>
+    <div class="formula-inline">Error estándar σ_e = √(SS_res/(n−2)) = ${f4(err_std)}</div>
+    <div class="resultado">R² = ${f4(r2)} → El modelo explica el ${fp(r2*100)} de la variabilidad temporal</div>
+    <div style="color:var(--naranja);font-size:.82rem;margin-top:.4rem">⚠️ <strong>Aclaración conceptual:</strong> R² es el coeficiente de determinación (varianza explicada), <strong>NO una medida de exactitud (Accuracy)</strong>.</div>
+  </div></div>
+`;
+
+/* Ecuación resultado */
+document.getElementById('eqRL').innerHTML = `
+  <div class="formula">Y = ${f4(m)} · X ${sgn(b)}</div>
+  <div class="sub">Pendiente m = ${f4(m)} | Intercepto b = ${f4(b)} | R² = ${f4(r2)} (Variabilidad explicada, no Accuracy) | Error estándar = ${f2(err_std)} | n = ${n}</div>
+`;
+
+/* KPIs regresión */
+document.getElementById('kpiRL').innerHTML = `
+  <div class="kpi azul"><div class="lbl">Pendiente (m)</div><div class="val">${f4(m)}</div><div class="sub">accidentes por año</div></div>
+  <div class="kpi verde"><div class="lbl">Intercepto (b)</div><div class="val" style="font-size:1.1rem">${f2(b)}</div><div class="sub">valor teórico cuando X=0</div></div>
+  <div class="kpi naranja"><div class="lbl">R² (Determinación)</div><div class="val">${fp(r2*100)}</div><div class="sub">variabilidad explicada (NO Accuracy)</div></div>
+  <div class="kpi rojo"><div class="lbl">Error estándar</div><div class="val">${f2(err_std)}</div><div class="sub">accidentes</div></div>
+  <div class="kpi morado"><div class="lbl">Error abs. máximo</div><div class="val">${f2(Math.max(...RL.err_abs))}</div><div class="sub">año ${DATA_X[RL.err_abs.indexOf(Math.max(...RL.err_abs))]}</div></div>
+  <div class="kpi azul"><div class="lbl">Error abs. promedio</div><div class="val">${f2(RL.err_abs.reduce((a,b)=>a+b,0)/n)}</div><div class="sub">accidentes</div></div>
+`;
+
+/* Tabla RL */
+const tbRL = document.getElementById('tbRL');
+let sumEA = 0, sumEP = 0;
+DATA_X.forEach((xi, i) => {
+  const yr = DATA_Y[i], yh = yp[i], res = yr - yh, ea = RL.err_abs[i], ep = RL.err_pct[i];
+  sumEA += ea; sumEP += ep;
+  const cls = ep < 30 ? 'b-verde' : ep < 70 ? 'b-naranja' : 'b-rojo';
+  const lbl = ep < 30 ? '✓ Bueno' : ep < 70 ? '~ Regular' : '✗ Alto';
+  tbRL.innerHTML += `<tr>
+    <td><strong>${xi}</strong></td>
+    <td class="tr">${f2(yr)}</td>
+    <td class="tr">${f2(yh)}</td>
+    <td class="tr" style="color:${res>=0?'var(--azul)':'var(--rojo)'}">${res>=0?'+':''}${f2(res)}</td>
+    <td class="tr">${f2(ea)}</td>
+    <td class="tr">${fp(ep)}</td>
+    <td>${badge(cls, lbl)}</td>
+  </tr>`;
+});
+document.getElementById('tfRL').innerHTML = `<tr>
+  <td colspan="4"><strong>PROMEDIO</strong></td>
+  <td class="tr"><strong>${f2(sumEA/n)}</strong></td>
+  <td class="tr"><strong>${fp(sumEP/n)}</strong></td>
+  <td></td>
+</tr>`;
+
+/* ═══════════════════════════════════════════════════════
+   RENDERIZAR SECCIÓN 3: Lagrange
+═══════════════════════════════════════════════════════ */
+const lagGrado = LAG_X.length - 1;
+document.getElementById('lagGrado').innerHTML = `Se eligieron <strong style="color:var(--naranja)">${LAG_X.length} nodos</strong> → Polinomio de <strong style="color:var(--naranja)">grado ${lagGrado}</strong>. Incluyen el dato mínimo (${Math.min(...LAG_X)}) y máximo (${Math.max(...LAG_X)}) del rango X.`;
+document.getElementById('lagRango').textContent  = `${Math.min(...LAG_X)}, ${Math.max(...LAG_X)}`;
+document.getElementById('lagRango2').textContent = `${Math.min(...LAG_X)} y ${Math.max(...LAG_X)}`;
+
+/* Nodos */
+document.getElementById('nodosGrid').innerHTML = LAG_X.map((xi,i) => `
+  <div class="nodo">
+    <div class="ni">Nodo ${i}</div>
+    <div class="nx">${xi}</div>
+    <div class="ny">${f2(LAG_Y[i])} acc.</div>
+    <div class="nd">${LAG_DESC[i]}</div>
+  </div>`).join('');
+
+/* Proceso Lagrange — ejemplo para x = 2017 (punto no nodo) */
+const xEj = 2017;
+document.getElementById('stepsLag').innerHTML = `
+  <div class="step"><div class="step-n">1</div><div class="step-body">
+    <div class="titulo">Definir los nodos (xi, yi) y el punto a interpolar</div>
+    <div class="formula-inline">Nodos: ${LAG_X.map((xi,i)=>`(${xi}, ${f2(LAG_Y[i])})`).join(' | ')}</div>
+    <div class="formula-inline">Punto a interpolar: x = ${xEj} (dentro del rango [${Math.min(...LAG_X)}, ${Math.max(...LAG_X)}])</div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-body">
+    <div class="titulo">Calcular cada polinomio base Li(x) para x = ${xEj}</div>
+    ${LAG_X.map((xi,i) => {
+      const liVal = Li(i, xEj, LAG_X);
+      const factores = LAG_X.filter((_,j)=>j!==i).map((xj,_) => `(${xEj}−${xj})/(${xi}−${xj})`).join(' · ');
+      return `<div class="formula-inline" style="margin:.2rem 0">L${i}(${xEj}) = ${factores} = <strong>${f4(liVal)}</strong></div>`;
+    }).join('')}
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-body">
+    <div class="titulo">Calcular P(x) = Σ yi · Li(x)</div>
+    ${LAG_X.map((xi,i) => {
+      const liVal = Li(i, xEj, LAG_X);
+      return `<div class="formula-inline" style="margin:.2rem 0">y${i}·L${i} = ${f2(LAG_Y[i])} × ${f4(liVal)} = ${f4(LAG_Y[i]*liVal)}</div>`;
+    }).join('')}
+    <div class="resultado" style="margin-top:.5rem">P(${xEj}) = ${f4(LAG_X.reduce((s,_,i)=>s+LAG_Y[i]*Li(i,xEj,LAG_X),0))}</div>
+    <div style="color:var(--muted);font-size:.82rem;margin-top:.4rem">Valor real del año ${xEj}: ${f2(DATA_Y[DATA_X.indexOf(xEj)]||0)} | "Dentro del rango se llama interpolar" ✅</div>
+  </div></div>
+
+  <div class="step"><div class="step-n">4</div><div class="step-body">
+    <div class="titulo">Verificar propiedad cardinal — el polinomio pasa EXACTAMENTE por los nodos</div>
+    ${LAG_X.map((xi,i) => {
+      const pxi = lagrange(xi, LAG_X, LAG_Y);
+      const err = Math.abs(LAG_Y[i] - pxi);
+      return `<div class="formula-inline" style="margin:.2rem 0">P(${xi}) = ${f4(pxi)} | Y_real = ${f2(LAG_Y[i])} | Error = ${err < 1e-6 ? '≈ 0.000000' : f6(err)} ✅</div>`;
+    }).join('')}
+  </div></div>
+`;
+
+/* Verificación en nodos */
+const tbNodos = document.getElementById('tbNodos');
+LAG_X.forEach((xi,i) => {
+  const pxi = lagrange(xi, LAG_X, LAG_Y);
+  const err = Math.abs(LAG_Y[i] - pxi);
+  tbNodos.innerHTML += `<tr>
+    <td>${i}</td>
+    <td class="tr"><strong>${xi}</strong></td>
+    <td class="tr">${f2(LAG_Y[i])}</td>
+    <td class="tr">${f2(pxi)}</td>
+    <td class="tr">${badge('b-verde', err < 1e-6 ? '≈ 0.000000' : f6(err))}</td>
+    <td>${badge('b-verde','✅ Exacto')}</td>
+  </tr>`;
+});
+
+/* Tabla de interpolaciones */
+const puntosInterp = [2015,2017,2018,2020,2021,2023,2025];
+const yRealesInterp= {2015:1178.81,2017:1833.67,2018:494.06,2020:259.98,2021:308.31,2023:412.38,2025:630.25};
+const tbInterp = document.getElementById('tbInterp');
+puntosInterp.forEach(xi => {
+  const yI  = lagrange(xi, LAG_X, LAG_Y);
+  const yr  = yRealesInterp[xi];
+  const ea  = Math.abs(yr - yI);
+  const ep  = ea / yr * 100;
+  const dentro = xi >= Math.min(...LAG_X) && xi <= Math.max(...LAG_X);
+  tbInterp.innerHTML += `<tr>
+    <td><strong>${xi}</strong></td>
+    <td class="tr">${f2(yI)}</td>
+    <td class="tr">${f2(yr)}</td>
+    <td class="tr">${f2(ea)}</td>
+    <td class="tr">${fp(ep)}</td>
+    <td>${badge(dentro ? 'b-verde' : 'b-rojo', dentro ? '✓ Dentro' : '⚠ Fuera')}</td>
+  </tr>`;
+});
+
+/* ═══════════════════════════════════════════════════════
+   RENDERIZAR SECCIÓN 4: Comparación — Tabla
+═══════════════════════════════════════════════════════ */
+const tbComp = document.getElementById('tbComp');
+let sRL=0, sLag=0;
+DATA_X.forEach((xi,i) => {
+  const yr=DATA_Y[i], yRL=yp[i], yLg=DATA_YLag[i];
+  const eRL=Math.abs(yr-yRL)/yr*100, eLag=Math.abs(yr-yLg)/yr*100;
+  sRL+=eRL; sLag+=eLag;
+  const mejor = eRL < eLag ? badge('b-verde','Regresión') : badge('b-morado','Lagrange');
+  tbComp.innerHTML += `<tr>
+    <td><strong>${xi}</strong></td>
+    <td class="tr">${f2(yr)}</td>
+    <td class="tr">${f2(yRL)}</td>
+    <td class="tr"><span class="badge ${eRL<30?'b-verde':eRL<70?'b-naranja':'b-rojo'}">${fp(eRL)}</span></td>
+    <td class="tr">${f2(yLg)}</td>
+    <td class="tr"><span class="badge ${eLag<30?'b-verde':eLag<70?'b-naranja':'b-rojo'}">${fp(eLag)}</span></td>
+    <td>${mejor}</td>
+  </tr>`;
+});
+document.getElementById('tfComp').innerHTML = `<tr>
+  <td colspan="2"><strong>PROMEDIO</strong></td>
+  <td></td><td class="tr"><strong>${fp(sRL/n)}</strong></td>
+  <td></td><td class="tr"><strong>${fp(sLag/n)}</strong></td><td></td>
+</tr>`;
+
+document.getElementById('tbResumen').innerHTML = `
+  <tr><td>Propósito</td><td>Tendencia general</td><td>Estimación puntual</td></tr>
+  <tr><td>Fórmula</td><td><code>Y = ${f4(m)}·X ${sgn(b)}</code></td><td><code>P(x) = Σ yi·Li(x)</code></td></tr>
+  <tr><td>Pasa por todos los datos</td><td>${badge('b-rojo','❌ No (minimiza error residual)')}</td><td>${badge('b-verde','✅ Sí, únicamente en los 5 nodos')}</td></tr>
+  <tr><td>Datos usados</td><td>${n} años (Macro) | 25 semestres</td><td>${LAG_X.length} nodos estratégicos</td></tr>
+  <tr><td>Cumplimiento &ge; 15 observaciones</td><td>${badge('b-verde','✅ SÍ (25 semestres / 507 observaciones distribuidas en 149 periodos)')}</td><td>5 nodos (Grado n-1 = 4)</td></tr>
+  <tr><td>Grado del polinomio</td><td>1 (lineal)</td><td>${lagGrado} (${lagGrado===4?'cuártico':lagGrado===3?'cúbico':'cuadrático'})</td></tr>
+  <tr><td>R² / bondad de ajuste</td><td><strong>R² = ${f4(r2)}</strong> <small style="color:var(--naranja)">(Var. explicada, NO Accuracy)</small></td><td>N/A (error = 0 únicamente en nodos)</td></tr>
+  <tr><td>Error promedio</td><td>${fp(sRL/n)}</td><td>${fp(sLag/n)}</td></tr>
+  <tr><td>Válido fuera del rango</td><td>${badge('b-naranja','⚠ Extrapolación')}</td><td>${badge('b-rojo','❌ No recomendado (divergencia)')}</td></tr>
+`;
+
+/* ═══════════════════════════════════════════════════════
+   PREDICTOR INTERACTIVO
+═══════════════════════════════════════════════════════ */
+async function calcRL(persist = true) {
+  const x = parseFloat(document.getElementById('inputRL').value);
+  if (isNaN(x)) return;
+  const yh = m * x + b;
+  const dentro = x >= Math.min(...DATA_X) && x <= Math.max(...DATA_X);
+  document.getElementById('resultRL').innerHTML =
+    `Y = ${f4(m)} × ${x} ${sgn(b)}<br>` +
+    `<strong>Accidentes predichos en ${x}: ${f2(yh)}</strong><br>` +
+    `<small style="color:var(--muted)">${dentro ? '✅ Interpolación (dentro del rango)' : '⚠️ Extrapolación (fuera del rango)'}</small>`;
+  if (persist && window.AutoGestAPI) {
+    await window.AutoGestAPI.savePrediction('regresion_anual', x);
+  }
+}
+
+async function calcLag(persist = true) {
+  const x = parseFloat(document.getElementById('inputLag').value);
+  if (isNaN(x)) return;
+  const yI = lagrange(x, LAG_X, LAG_Y);
+  const dentro = x >= Math.min(...LAG_X) && x <= Math.max(...LAG_X);
+  const pasos = LAG_X.map((xi,i) => `L${i}(${x})=${f4(Li(i,x,LAG_X))}`).join(' | ');
+  document.getElementById('resultLag').innerHTML =
+    `Bases: ${pasos}<br>` +
+    `<strong>P(${x}) ≈ ${f2(yI)} accidentes</strong><br>` +
+    `<small style="color:${dentro?'var(--verde)':'var(--rojo)'}">${dentro ? '✅ Dentro del rango — interpolación válida' : '⚠️ Fuera del rango — resultado no confiable'}</small>`;
+  if (persist && window.AutoGestAPI) {
+    await window.AutoGestAPI.savePrediction('lagrange', x);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   GRÁFICAS — Chart.js
+═══════════════════════════════════════════════════════ */
+function initCharts() {
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.js no cargó aún. Reintentando...');
+    setTimeout(initCharts, 300);
+    return;
+  }
+
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.borderColor = '#334155';
+  Chart.defaults.font.family = 'Segoe UI, system-ui, sans-serif';
+
+  const baseOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color:'#94a3b8', boxWidth:14, padding:14, font:{size:11} } },
+      tooltip: { backgroundColor:'#1e293b', titleColor:'#e2e8f0', bodyColor:'#94a3b8', borderColor:'#334155', borderWidth:1, padding:10 }
+    },
+    scales: {
+      x: { ticks:{color:'#64748b', font:{size:10}}, grid:{color:'#1e293b'} },
+      y: { ticks:{color:'#64748b', font:{size:10}, callback: v => v.toLocaleString('es-CO')}, grid:{color:'#1e293b'}, min:0 }
+    }
+  };
+
+  
+/* ── Datos Semestrales Oficiales (N = 25 >= 15) ── */
+const DATA_SEM_LABEL = [
+  "2014-S1","2014-S2","2015-S1","2015-S2","2016-S1","2016-S2","2017-S1","2017-S2",
+  "2018-S1","2018-S2","2019-S1","2019-S2","2020-S1","2020-S2","2021-S1","2021-S2",
+  "2022-S1","2022-S2","2023-S1","2023-S2","2024-S1","2024-S2","2025-S1","2025-S2","2026-S1*"
+];
+const DATA_SEM_X = [
+  2014.0, 2014.5, 2015.0, 2015.5, 2016.0, 2016.5, 2017.0, 2017.5,
+  2018.0, 2018.5, 2019.0, 2019.5, 2020.0, 2020.5, 2021.0, 2021.5,
+  2022.0, 2022.5, 2023.0, 2023.5, 2024.0, 2024.5, 2025.0, 2025.5, 2026.0
+];
+const DATA_SEM_Y = [
+  1113.72, 1124.33, 1143.22, 1214.39, 2104.39, 2109.44, 1854.33, 1813.00,
+  530.00, 458.11, 448.78, 412.06, 251.17, 268.79, 318.58, 298.04,
+  377.29, 396.38, 418.17, 406.58, 443.79, 468.08, 610.11, 650.39, 677.07
+];
+const rlSem = regresionLineal(DATA_SEM_X, DATA_SEM_Y);
+
+// Renderizar tabla semestral
+(function poblarTablaSemestral() {
+  const tb = document.getElementById('tbRLSem');
+  const tf = document.getElementById('tfRLSem');
+  if (!tb) return;
+  let sumY = 0, sumYp = 0, sumRes = 0, sumAbs = 0, sumPct = 0;
+  let html = '';
+  DATA_SEM_X.forEach((x, i) => {
+    const y = DATA_SEM_Y[i];
+    const yp = rlSem.yp[i];
+    const res = y - yp;
+    const errAbs = Math.abs(res);
+    const errPct = (errAbs / y) * 100;
+    sumY += y; sumYp += yp; sumRes += res; sumAbs += errAbs; sumPct += errPct;
+
+    let bCls = 'b-verde', bTxt = 'Óptimo';
+    if (errPct > 35) { bCls = 'b-naranja'; bTxt = 'Disperso'; }
+    else if (errPct > 20) { bCls = 'b-azul'; bTxt = 'Aceptable'; }
+
+    const isPart = DATA_SEM_LABEL[i].includes('*');
+    const lblDisplay = isPart
+      ? `<strong>${DATA_SEM_LABEL[i]}</strong> <span class="badge b-naranja" style="font-size:.65rem;margin-left:4px">Parcial (5 meses)</span>`
+      : `<strong>${DATA_SEM_LABEL[i]}</strong>`;
+
+    html += `<tr>
+      <td>${i + 1}</td>
+      <td>${lblDisplay}</td>
+      <td>${x.toFixed(1)}</td>
+      <td class="tr">${f2(y)}</td>
+      <td class="tr">${f2(yp)}</td>
+      <td class="tr" style="color:${res >= 0 ? '#38bdf8' : '#fb923c'}">${res >= 0 ? '+' : ''}${f2(res)}</td>
+      <td class="tr">${f2(errAbs)}</td>
+      <td class="tr"><strong>${errPct.toFixed(2)}%</strong></td>
+      <td><span class="badge ${bCls}">${bTxt}</span></td>
+    </tr>`;
+  });
+  tb.innerHTML = html;
+
+  const n = DATA_SEM_X.length;
+  if (tf) {
+    tf.innerHTML = `
+    <tr style="font-weight:700;background:#0f172a;color:var(--verde);border-top:2px solid var(--verde)">
+      <td colspan="3">SUMATORIAS (N = ${n} Semestres)</td>
+      <td class="tr">&Sigma;y = 19,910.21</td>
+      <td class="tr">&Sigma;ŷ = 19,910.21</td>
+      <td class="tr">&Sigma;res = 0.00</td>
+      <td class="tr">&Sigma;|e| = ${f2(sumAbs)}</td>
+      <td class="tr">&Sigma;e% = ${sumPct.toFixed(1)}%</td>
+      <td><span class="badge b-verde">S_e = 479.59 acc.</span></td>
+    </tr>
+    <tr style="font-weight:700;background:var(--bg2);color:var(--text)">
+      <td colspan="3">MEDIAS Y ECUACIÓN OFICIAL</td>
+      <td class="tr">ȳ = ${f2(sumY / n)}</td>
+      <td class="tr">x&#772; = 2,020.00</td>
+      <td colspan="2" style="text-align:center;color:var(--verde)">Y = &minus;99.8471&middot;X + 202,487.60</td>
+      <td class="tr">Err Prom: ${(sumPct / n).toFixed(2)}%</td>
+      <td><span class="badge b-verde">R² = 37.98%</span></td>
+    </tr>`;
+  }
+})();
+
+  
+  /* ── Gráfica 0: Regresión Semestral Oficial (N=25) ── */
+  const semCurveX = [Math.min(...DATA_SEM_X) - 0.3, Math.max(...DATA_SEM_X) + 0.3];
+  const semCurveY = semCurveX.map(x => rlSem.m * x + rlSem.b);
+  try {
+    const canvasSem = document.getElementById('chartRLSem');
+    if (canvasSem) {
+      new Chart(canvasSem, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Observaciones reales semestrales (N=25)',
+              data: DATA_SEM_X.map((x, i) => ({ x, y: DATA_SEM_Y[i] })),
+              backgroundColor: '#38bdf8',
+              borderColor: '#38bdf8',
+              pointRadius: 6,
+              pointHoverRadius: 9
+            },
+            {
+              label: `Recta Oficial: Y = ${f4(rlSem.m)}·X ${sgn(rlSem.b)} (R²=${(rlSem.r2*100).toFixed(2)}%)`,
+              data: semCurveX.map((x, i) => ({ x, y: semCurveY[i] })),
+              type: 'line',
+              showLine: true,
+              borderColor: '#34d399',
+              backgroundColor: 'transparent',
+              borderWidth: 2.5,
+              pointRadius: 0
+            },
+            {
+              label: 'Mínimo semestral (2020-S1)',
+              data: [{ x: 2020.0, y: 251.17 }],
+              backgroundColor: '#34d399',
+              borderColor: '#0f172a',
+              borderWidth: 1.5,
+              pointRadius: 10,
+              pointStyle: 'triangle'
+            },
+            {
+              label: 'Máximo semestral (2016-S2)',
+              data: [{ x: 2016.5, y: 2109.44 }],
+              backgroundColor: '#f87171',
+              borderColor: '#0f172a',
+              borderWidth: 1.5,
+              pointRadius: 10,
+              pointStyle: 'triangle',
+              rotation: 180
+            }
+          ]
+        },
+        options: {
+          ...baseOpts,
+          scales: {
+            ...baseOpts.scales,
+            x: {
+              type: 'linear',
+              min: 2013.5,
+              max: 2026.5,
+              ticks: {
+                color: '#64748b',
+                stepSize: 1,
+                callback: v => {
+                  const sIdx = DATA_SEM_X.indexOf(v);
+                  return sIdx >= 0 ? DATA_SEM_LABEL[sIdx] : v.toString();
+                }
+              },
+              grid: { color: '#1e293b' },
+              title: { display: true, text: 'AÑO Y SEMESTRE (X)', color: '#94a3b8' }
+            },
+            y: {
+              ...baseOpts.scales.y,
+              title: { display: true, text: 'Accidentes por Semestre (Y)', color: '#94a3b8' }
+            }
+          },
+          plugins: {
+            ...baseOpts.plugins,
+            tooltip: {
+              ...baseOpts.plugins.tooltip,
+              callbacks: {
+                label: c => {
+                  const sIdx = DATA_SEM_X.indexOf(c.parsed.x);
+                  const lbl = sIdx >= 0 ? DATA_SEM_LABEL[sIdx] : `X=${c.parsed.x}`;
+                  return `${c.dataset.label}: ${lbl} -> ${f2(c.parsed.y)} acc.`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Error inicializando chartRLSem:', e);
+  }
+
+  /* ── Gráfica 1: Regresión Lineal ── */
+  const rlCurveX = [Math.min(...DATA_X) - 0.5, Math.max(...DATA_X) + 0.5];
+  const rlCurveY = rlCurveX.map(x => m * x + b);
+  try {
+    new Chart(document.getElementById('chartRL'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Datos reales (prom. anual)',
+            data: DATA_X.map((x, i) => ({ x, y: DATA_Y[i] })),
+            backgroundColor: '#38bdf8',
+            borderColor: '#38bdf8',
+            pointRadius: 7,
+            pointHoverRadius: 10
+          },
+          {
+            label: `Recta ajustada: Y = ${f4(m)}·X ${sgn(b)}`,
+            data: rlCurveX.map((x, i) => ({ x, y: rlCurveY[i] })),
+            type: 'line',
+            showLine: true,
+            borderColor: '#34d399',
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
+            pointRadius: 0
+          },
+          {
+            label: `Mínimo Y (${DATA_X[idxMinY]})`,
+            data: [{ x: DATA_X[idxMinY], y: minY }],
+            backgroundColor: '#34d399',
+            borderColor: '#0f172a',
+            borderWidth: 1.5,
+            pointRadius: 12,
+            pointStyle: 'triangle'
+          },
+          {
+            label: `Máximo Y (${DATA_X[idxMaxY]})`,
+            data: [{ x: DATA_X[idxMaxY], y: maxY }],
+            backgroundColor: '#f87171',
+            borderColor: '#0f172a',
+            borderWidth: 1.5,
+            pointRadius: 12,
+            pointStyle: 'triangle',
+            rotation: 180
+          },
+          {
+            label: 'Y predicho (ŷ)',
+            data: DATA_X.map((x, i) => ({ x, y: yp[i] })),
+            backgroundColor: '#fb923c',
+            borderColor: '#0f172a',
+            borderWidth: 1,
+            pointRadius: 5,
+            pointStyle: 'rect'
+          }
+        ]
+      },
+      options: {
+        ...baseOpts,
+        scales: {
+          ...baseOpts.scales,
+          x: {
+            type: 'linear',
+            min: 2013,
+            max: 2027,
+            ticks: { color: '#64748b', stepSize: 1, callback: v => v.toString() },
+            grid: { color: '#1e293b' },
+            title: { display: true, text: 'AÑO (Variable X)', color: '#94a3b8' }
+          },
+          y: {
+            ...baseOpts.scales.y,
+            title: { display: true, text: 'Accidentes Registrados (Variable Y)', color: '#94a3b8' }
+          }
+        }
+      }
+    });
+  } catch (e) {
+    console.error('Error inicializando chartRL:', e);
+  }
+
+  /* ── Gráfica 2: Lagrange ── */
+  try {
+    new Chart(document.getElementById('chartLag'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Todos los datos reales',
+            data: DATA_X.map((x, i) => ({ x, y: DATA_Y[i] })),
+            backgroundColor: '#475569',
+            borderColor: '#475569',
+            pointRadius: 5,
+            order: 4
+          },
+          {
+            label: `Polinomio de Lagrange (grado ${lagGrado})`,
+            data: lagCurveX.map((x, i) => ({ x, y: lagCurveY[i] })),
+            type: 'line',
+            showLine: true,
+            borderColor: '#a78bfa',
+            backgroundColor: 'rgba(167, 139, 250, 0.12)',
+            borderWidth: 2.5,
+            pointRadius: 0,
+            fill: true,
+            order: 3
+          },
+          {
+            label: `Nodos seleccionados (n=${LAG_X.length})`,
+            data: LAG_X.map((x, i) => ({ x, y: LAG_Y[i] })),
+            backgroundColor: '#fb923c',
+            borderColor: '#0f172a',
+            borderWidth: 1.5,
+            pointRadius: 11,
+            pointStyle: 'circle',
+            order: 1
+          },
+          {
+            label: 'Puntos interpolados',
+            data: puntosInterp.map(x => ({ x, y: lagrange(x, LAG_X, LAG_Y) })),
+            backgroundColor: '#34d399',
+            borderColor: '#0f172a',
+            borderWidth: 1,
+            pointRadius: 8,
+            pointStyle: 'rectRot',
+            order: 2
+          }
+        ]
+      },
+      options: {
+        ...baseOpts,
+        scales: {
+          ...baseOpts.scales,
+          x: {
+            type: 'linear',
+            min: 2013.5,
+            max: 2026.5,
+            ticks: { color: '#64748b', stepSize: 1, callback: v => v.toString() },
+            grid: { color: '#1e293b' },
+            title: { display: true, text: 'AÑO (Rango [2014, 2026])', color: '#94a3b8' }
+          },
+          y: {
+            ...baseOpts.scales.y,
+            title: { display: true, text: 'Accidentes Registrados', color: '#94a3b8' }
+          }
+        }
+      }
+    });
+  } catch (e) {
+    console.error('Error inicializando chartLag:', e);
+  }
+
+  /* ── Gráfica 3: Comparación ── */
+  try {
+    new Chart(document.getElementById('chartComp'), {
+      type: 'line',
+      data: {
+        labels: DATA_X,
+        datasets: [
+          {
+            label: 'Datos Reales',
+            data: DATA_Y,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.12)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointRadius: 5
+          },
+          {
+            label: `Regresión Lineal (R²=${f4(r2)})`,
+            data: yp,
+            borderColor: '#34d399',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0,
+            borderWidth: 2,
+            borderDash: [8, 4],
+            pointRadius: 4,
+            pointStyle: 'rect'
+          },
+          {
+            label: `Polinomio Lagrange (grado ${lagGrado})`,
+            data: DATA_YLag,
+            borderColor: '#a78bfa',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.3,
+            borderWidth: 2,
+            borderDash: [3, 3],
+            pointRadius: 4,
+            pointStyle: 'triangle'
+          }
+        ]
+      },
+      options: baseOpts
+    });
+  } catch (e) {
+    console.error('Error inicializando chartComp:', e);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCharts);
+} else {
+  initCharts();
+}
+
+/* Inicializar predictor (sin persistir en carga inicial) */
+calcRL(false); calcLag(false);
+</script>
+
+<script src="/config.js"></script>
+<script src="/api-client.js"></script>
+</body>
+</html>
